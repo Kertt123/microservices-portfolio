@@ -19,10 +19,10 @@ services:
     command: -p 5431
     restart: always
 
-  ## Order-Service Docker Compose Config
+  ## Order.java-Service Docker Compose Config
   order-service:
     container_name: order-service
-    build: microservices-portfolio/order-service:latest
+    build: order-service
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5431/order-service
     depends_on:
