@@ -1,11 +1,13 @@
 package com.serkowski.orderservice.repository.read;
 
-import com.serkowski.orderservice.model.Order;
+import com.serkowski.orderservice.model.OrderSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-@Repository
-public interface OrderReadRepository extends JpaRepository<Order, Long> {
+import java.util.Optional;
 
-    Order findByOrderNumber(String orderNumber);
+@Repository
+public interface OrderReadRepository extends JpaRepository<OrderSummary, Long> {
+
+    Optional<OrderSummary> findByOrderNumber(String orderNumber);
 }

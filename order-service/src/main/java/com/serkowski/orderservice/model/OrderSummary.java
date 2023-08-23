@@ -1,9 +1,6 @@
 package com.serkowski.orderservice.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import jakarta.persistence.*;
 import java.util.List;
@@ -12,9 +9,10 @@ import java.util.List;
 @Table(name = "orders")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Order {
+public class OrderSummary {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,4 +22,6 @@ public class Order {
     private List<OrderItem> orderLineItemsList;
     @OneToOne(cascade = CascadeType.ALL)
     private Address address;
+    @Enumerated(EnumType.ORDINAL)
+    private State state;
 }
