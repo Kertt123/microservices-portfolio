@@ -52,6 +52,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public void deleteOrderByOrderNumber(String orderNumber) {
-        orderWriteRepository.deleteByOrderNumber(orderNumber);
+        orderReadRepository.findByOrderNumber(orderNumber)
+                .ifPresentOrElse(order -> orderWriteRepository.delete(order), () -> {
+                    throw new OrderNotFound("Order which number: " + orderNumber + " not exist, so can't be deleted");
+                });
     }
 }

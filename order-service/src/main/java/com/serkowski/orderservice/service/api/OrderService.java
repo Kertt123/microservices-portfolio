@@ -12,7 +12,7 @@ public interface OrderService {
      * @param orderRequest request
      * @return {@link OrderResponse}
      */
-    public OrderResponse placeOrderDraft(OrderRequest orderRequest);
+    OrderResponse placeOrderDraft(OrderRequest orderRequest);
 
     /**
      * Update already existing order draft
@@ -21,7 +21,7 @@ public interface OrderService {
      * @param orderNumber  order number
      * @return {@link OrderResponse}
      */
-    public OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber);
+    OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber);
 
     /**
      * Get order by order number
@@ -29,13 +29,13 @@ public interface OrderService {
      * @param orderNumber order number
      * @return {@link OrderResponse}
      */
-    public OrderResponse getOrderByOrderNumber(String orderNumber);
+    OrderResponse getOrderByOrderNumber(String orderNumber);
 
     /**
      * Delete order by order number.
      *
-     * @param orderNumber
+     * @param orderNumber order number
      */
-    public void deleteOrderByOrderNumber(String orderNumber);
+    void deleteOrderByOrderNumber(String orderNumber);
 
 }

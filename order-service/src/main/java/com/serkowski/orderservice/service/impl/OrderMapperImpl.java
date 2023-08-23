@@ -46,7 +46,7 @@ public class OrderMapperImpl implements OrderMapper {
         return orderItems.stream().map(orderItemDto -> {
             OrderItem orderItem = new OrderItem();
             orderItem.setItemName(orderItemDto.getItemName());
-            orderItem.setCount(orderItem.getCount());
+            orderItem.setCount(orderItemDto.getCount());
             return orderItem;
         }).collect(Collectors.toList());
     }

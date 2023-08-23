@@ -21,7 +21,7 @@ public interface OrderMapper {
      * @param state        order state
      * @return {@link OrderSummary}
      */
-    public OrderSummary map(OrderRequest orderRequest, State state);
+    OrderSummary map(OrderRequest orderRequest, State state);
 
     /**
      * Map {@link OrderSummary} to {@link OrderResponse}
@@ -29,7 +29,7 @@ public interface OrderMapper {
      * @param orderSummary summary
      * @return {@link OrderResponse}
      */
-    public OrderResponse map(OrderSummary orderSummary);
+    OrderResponse map(OrderSummary orderSummary);
 
     /**
      * Map {@link OrderItemRequestDto} to {@link OrderItem}

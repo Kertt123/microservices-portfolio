@@ -91,6 +91,47 @@ public class OrderServiceImplTest {
         assertEquals("Can't update order which is not exist for number: testNumber123", exception.getMessage());
     }
 
+    @Test
+    void shouldThrowExceptionDuringGetOrder() {
+        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
+
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> {
+            orderService.getOrderByOrderNumber("testNumber123");
+        });
+        assertEquals("Order which number: testNumber123 not exist", exception.getMessage());
+    }
+
+    @Test
+    void shouldGetOrderByOrderNumber() {
+        OrderResponse response = OrderResponse.builder().build();
+        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.ofNullable(OrderSummary.builder().build()));
+        when(orderMapper.map(any(OrderSummary.class))).thenReturn(response);
+
+        OrderResponse result = orderService.getOrderByOrderNumber("testNumber123");
+
+        assertEquals(response, result);
+    }
+
+    @Test
+    void shouldDeleteOrderByOrderNumber() {
+        OrderSummary order = OrderSummary.builder().build();
+        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.ofNullable(order));
+
+        orderService.deleteOrderByOrderNumber("testNumber123");
+
+        verify(orderWriteRepository).delete(eq(order));
+    }
+
+    @Test
+    void shouldThrowExceptionDuringDeleteOrder() {
+        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
+
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> {
+            orderService.deleteOrderByOrderNumber("testNumber123");
+        });
+        assertEquals("Order which number: testNumber123 not exist, so can't be deleted", exception.getMessage());
+    }
+
     private OrderSummary prepareOrder() {
         return OrderSummary.builder()
                 .id(1L)
