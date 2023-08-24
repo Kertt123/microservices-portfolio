@@ -33,11 +33,10 @@ public class OrderMapperImpl implements OrderMapper {
     @Override
     public OrderResponse map(OrderSummary orderSummary) {
         return OrderResponse.builder()
-                .id(orderSummary.getId())
                 .oderNumber(orderSummary.getOrderNumber())
                 .state(orderSummary.getState().name())
                 .orderItems(mapResponseItems(orderSummary.getOrderLineItemsList()))
-                .addressDto(mapAddressResponse(orderSummary.getAddress()))
+                .address(mapAddressResponse(orderSummary.getAddress()))
                 .build();
     }
 
@@ -47,6 +46,7 @@ public class OrderMapperImpl implements OrderMapper {
             OrderItem orderItem = new OrderItem();
             orderItem.setItemName(orderItemDto.getItemName());
             orderItem.setCount(orderItemDto.getCount());
+            orderItem.setItemRef(orderItemDto.getItemRef());
             return orderItem;
         }).collect(Collectors.toList());
     }
@@ -67,6 +67,7 @@ public class OrderMapperImpl implements OrderMapper {
                                 .id(entity.getId())
                                 .count(entity.getCount())
                                 .itemName(entity.getItemName())
+                                .itemRef(entity.getItemRef())
                                 .build()
                 ).collect(Collectors.toList());
     }

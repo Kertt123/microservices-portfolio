@@ -10,9 +10,8 @@ import java.util.List;
 @NoArgsConstructor
 public class OrderResponse {
 
-    private Long id;
     private String oderNumber;
     private String state;
     private List<OrderItemResponseDto> orderItems;
-    private AddressResponseDto addressDto;
+    private AddressResponseDto address;
 }

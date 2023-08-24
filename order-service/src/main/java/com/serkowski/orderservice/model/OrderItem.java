@@ -17,4 +17,5 @@ public class OrderItem {
     private Long id;
     private int count;
     private String itemName;
+    private String itemRef;
 }

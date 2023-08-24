@@ -15,12 +15,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 
 class OrderMapperTest {
 
-    private OrderMapper orderMapper = new OrderMapperImpl();
+    private final OrderMapper orderMapper = new OrderMapperImpl();
 
 
     @Test
@@ -35,6 +33,7 @@ class OrderMapperTest {
                 "Map request to summary",
                 () -> assertEquals(1, result.getOrderLineItemsList().get(0).getCount(), "Count should be 1"),
                 () -> assertEquals("name", result.getOrderLineItemsList().get(0).getItemName(), "Item name should be \"name\""),
+                () -> assertEquals("ref1", result.getOrderLineItemsList().get(0).getItemRef(), "Item reference should be \"ref1\""),
                 () -> assertEquals("test", result.getAddress().getAddressLine1(), "First address line is \"test\""),
                 () -> assertEquals("test2", result.getAddress().getAddressLine2(), "Second address line is \"test2\""),
                 () -> assertEquals("city", result.getAddress().getCity(), "City is \"city\""),
@@ -47,6 +46,7 @@ class OrderMapperTest {
         OrderSummary orderSummary = OrderSummary.builder()
                 .id(1L)
                 .orderNumber("test123")
+                .state(State.DRAFT)
                 .orderLineItemsList(prepareOrderLineItems())
                 .address(Address.builder()
                         .addressLine1("line1")
@@ -60,13 +60,53 @@ class OrderMapperTest {
 
         assertAll(
                 "Map summary to response",
-                () -> assertEquals(1L, result.getId(), "Count should be 1"),
-                () -> assertEquals(12, result.getOrderItems().get(0).getCount(), "Count should be 1"),
-                () -> assertEquals("name", result.getOrderLineItemsList().get(0).getItemName(), "Item name should be \"name\""),
-                () -> assertEquals("test", result.getAddress().getAddressLine1(), "First address line is \"test\""),
-                () -> assertEquals("test2", result.getAddress().getAddressLine2(), "Second address line is \"test2\""),
-                () -> assertEquals("city", result.getAddress().getCity(), "City is \"city\""),
+                () -> assertEquals("test123", result.getOderNumber(), "Order number should be \"test123\""),
+                () -> assertEquals("DRAFT", result.getState(), "State should be \"draft\""),
+                () -> assertEquals(12, result.getOrderItems().get(0).getCount(), "Count should be 12"),
+                () -> assertEquals("item name", result.getOrderItems().get(0).getItemName(), "Item name should be \"item name\""),
+                () -> assertEquals("ref1", result.getOrderItems().get(0).getItemRef(), "Item reference should be \"ref1\""),
+                () -> assertEquals("line1", result.getAddress().getAddressLine1(), "First address line is \"line1\""),
+                () -> assertEquals("line2", result.getAddress().getAddressLine2(), "Second address line is \"line2\""),
+                () -> assertEquals("city1", result.getAddress().getCity(), "City is \"city1\""),
                 () -> assertEquals("country", result.getAddress().getCountry(), "Country is \"country\"")
+        );
+    }
+
+    @Test
+    void shouldMapItemsRequestToEntity() {
+        OrderItemRequestDto itemRequestDto = OrderItemRequestDto.builder()
+                .count(1)
+                .itemName("item1")
+                .itemRef("ref1")
+                .build();
+
+        List<OrderItem> result = orderMapper.mapItems(List.of(itemRequestDto));
+
+        assertAll(
+                "Map request items to entity list",
+                () -> assertEquals("item1", result.get(0).getItemName(), "Item name should be \"item1\""),
+                () -> assertEquals(1, result.get(0).getCount(), "Count should be 1"),
+                () -> assertEquals("ref1", result.get(0).getItemRef(), "Item reference should be \"ref1\"")
+        );
+    }
+
+    @Test
+    void shouldMapAddressRequestToEntity() {
+        AddressRequestDto addressRequestDto = AddressRequestDto.builder()
+                .addressLine1("line1")
+                .addressLine2("line2")
+                .city("city")
+                .country("country")
+                .build();
+
+        Address result = orderMapper.mapAddress(addressRequestDto);
+
+        assertAll(
+                "Map request address to entity",
+                () -> assertEquals("line1", result.getAddressLine1(), "First address line is \"line1\""),
+                () -> assertEquals("line2", result.getAddressLine2(), "Second address line is \"line2\""),
+                () -> assertEquals("city", result.getCity(), "City is \"city1\""),
+                () -> assertEquals("country", result.getCountry(), "Country is \"country\"")
         );
     }
 
@@ -75,6 +115,7 @@ class OrderMapperTest {
                 .id(1L)
                 .count(12)
                 .itemName("item name")
+                .itemRef("ref1")
                 .build());
     }
 
@@ -82,6 +123,7 @@ class OrderMapperTest {
         OrderItemRequestDto orderItemRequestDto = new OrderItemRequestDto();
         orderItemRequestDto.setCount(1);
         orderItemRequestDto.setItemName("name");
+        orderItemRequestDto.setItemRef("ref1");
         return List.of(orderItemRequestDto);
     }
 
