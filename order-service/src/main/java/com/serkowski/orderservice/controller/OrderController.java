@@ -14,8 +14,6 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.concurrent.CompletableFuture;
-
 @RestController
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
@@ -38,9 +36,9 @@ public class OrderController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public CompletableFuture<OrderResponse> getOrder(@RequestParam String orderNumber) {
+    public OrderResponse getOrder(@RequestParam String orderNumber) {
         log.info("Retrieving order by number");
-        return CompletableFuture.supplyAsync(() -> orderService.getOrderByOrderNumber(orderNumber));
+        return orderService.getOrderByOrderNumber(orderNumber);
     }
 
     @DeleteMapping
@@ -54,16 +52,17 @@ public class OrderController {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ErrorHandlerResponse handleValidationExceptions(MethodArgumentNotValidException ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            response.getErrors().add(ErrorHandlerItem.builder()
-                    .fieldName(((FieldError) error).getField())
-                    .errorMessage(error.getDefaultMessage())
-                    .build());
-        });
+        ex.getBindingResult().getAllErrors().forEach((error) ->
+                response.getErrors().add(ErrorHandlerItem.builder()
+                        .fieldName(((FieldError) error).getField())
+                        .errorMessage(error.getDefaultMessage())
+                        .build())
+        );
         return response;
     }
 
     @ExceptionHandler(OrderNotFound.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorHandlerResponse handleOrderNotFound(OrderNotFound ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
         response.setErrorMessage(ex.getMessage());

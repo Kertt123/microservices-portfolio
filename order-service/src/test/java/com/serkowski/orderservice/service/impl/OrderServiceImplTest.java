@@ -85,9 +85,9 @@ public class OrderServiceImplTest {
         orderRequest.setAddressDto(address());
         when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
 
-        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> {
-            orderService.updateOrder(orderRequest, "testNumber123");
-        });
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
+                orderService.updateOrder(orderRequest, "testNumber123")
+        );
         assertEquals("Can't update order which is not exist for number: testNumber123", exception.getMessage());
     }
 
@@ -95,9 +95,9 @@ public class OrderServiceImplTest {
     void shouldThrowExceptionDuringGetOrder() {
         when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
 
-        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> {
-            orderService.getOrderByOrderNumber("testNumber123");
-        });
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
+                orderService.getOrderByOrderNumber("testNumber123")
+        );
         assertEquals("Order which number: testNumber123 not exist", exception.getMessage());
     }
 
@@ -126,9 +126,9 @@ public class OrderServiceImplTest {
     void shouldThrowExceptionDuringDeleteOrder() {
         when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
 
-        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> {
-            orderService.deleteOrderByOrderNumber("testNumber123");
-        });
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
+                orderService.deleteOrderByOrderNumber("testNumber123")
+        );
         assertEquals("Order which number: testNumber123 not exist, so can't be deleted", exception.getMessage());
     }
 

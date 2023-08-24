@@ -53,7 +53,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public void deleteOrderByOrderNumber(String orderNumber) {
         orderReadRepository.findByOrderNumber(orderNumber)
-                .ifPresentOrElse(order -> orderWriteRepository.delete(order), () -> {
+                .ifPresentOrElse(orderWriteRepository::delete, () -> {
                     throw new OrderNotFound("Order which number: " + orderNumber + " not exist, so can't be deleted");
                 });
     }
