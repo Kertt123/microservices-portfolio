@@ -33,7 +33,7 @@ public class OrderMapperImpl implements OrderMapper {
     @Override
     public OrderResponse map(OrderSummary orderSummary) {
         return OrderResponse.builder()
-                .oderNumber(orderSummary.getOrderNumber())
+                .orderNumber(orderSummary.getOrderNumber())
                 .state(orderSummary.getState().name())
                 .orderItems(mapResponseItems(orderSummary.getOrderLineItemsList()))
                 .address(mapAddressResponse(orderSummary.getAddress()))

@@ -1,6 +1,7 @@
 package com.serkowski.orderservice.dto.response;
 
 import lombok.*;
+import org.springframework.hateoas.RepresentationModel;
 
 import java.util.List;
 
@@ -8,9 +9,9 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderResponse {
+public class OrderResponse extends RepresentationModel<OrderResponse> {
 
-    private String oderNumber;
+    private String orderNumber;
     private String state;
     private List<OrderItemResponseDto> orderItems;
     private AddressResponseDto address;

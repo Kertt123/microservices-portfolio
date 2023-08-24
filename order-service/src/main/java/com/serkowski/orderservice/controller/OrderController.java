@@ -14,6 +14,8 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+
 @RestController
 @RequestMapping("/api/order")
 @RequiredArgsConstructor
@@ -25,27 +27,31 @@ public class OrderController {
     @PostMapping("/draft")
     @ResponseStatus(HttpStatus.CREATED)
     public OrderResponse placeOrderDraft(@Valid @RequestBody OrderRequest orderRequest) {
-        return orderService.placeOrderDraft(orderRequest);
+        OrderResponse response = orderService.placeOrderDraft(orderRequest);
+        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
+        return response;
     }
 
-    @PutMapping("/draft")
+    @PutMapping("/draft/{orderNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public OrderResponse updateOrderDraft(@RequestBody OrderRequest orderRequest, @RequestParam String orderNumber) {
-        return orderService.updateOrder(orderRequest, orderNumber);
+    public OrderResponse updateOrderDraft(@RequestBody OrderRequest orderRequest, @PathVariable String orderNumber) {
+        OrderResponse response = orderService.updateOrder(orderRequest, orderNumber);
+        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
+        return response;
     }
 
-    @GetMapping
+    @GetMapping("/{orderNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public OrderResponse getOrder(@RequestParam String orderNumber) {
-        log.info("Retrieving order by number");
-        return orderService.getOrderByOrderNumber(orderNumber);
+    public OrderResponse getOrder(@PathVariable String orderNumber) {
+        OrderResponse response = orderService.getOrderByOrderNumber(orderNumber);
+        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
+        return response;
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{orderNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public void deleteOrder(@RequestParam String orderNumber) {
+    public void deleteOrder(@PathVariable String orderNumber) {
         orderService.deleteOrderByOrderNumber(orderNumber);
-        log.info("Deleted");
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

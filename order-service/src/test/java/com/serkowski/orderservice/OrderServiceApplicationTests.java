@@ -22,8 +22,7 @@ import java.util.List;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -66,7 +65,8 @@ class OrderServiceApplicationTests {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(productRequestString))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$._links").exists());
 
         Assertions.assertEquals(1, orderReadRepository.findAll().size());
     }
@@ -129,8 +129,7 @@ class OrderServiceApplicationTests {
         OrderResponse response = objectMapper.readValue(createAction.getResponse().getContentAsString(), OrderResponse.class);
         orderRequest.getOrderItems().get(0).setItemName("afterUpdateName");
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/order/draft")
-                        .queryParam("orderNumber", response.getOderNumber())
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/order/draft/" + response.getOrderNumber())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
                 .andExpect(status().isOk())
@@ -145,8 +144,7 @@ class OrderServiceApplicationTests {
         orderRequest.setOrderItems(mapOrderItems());
         orderRequest.setAddressDto(mapAddress());
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/order/draft")
-                        .queryParam("orderNumber", "dummyOrder")
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/order/draft/dummyOrder")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(orderRequest)))
                 .andExpect(status().isNotFound())
@@ -167,16 +165,16 @@ class OrderServiceApplicationTests {
                 .andReturn();
         OrderResponse response = objectMapper.readValue(createAction.getResponse().getContentAsString(), OrderResponse.class);
 
-        MvcResult getAction = mockMvc.perform(MockMvcRequestBuilders.get("/api/order")
-                        .queryParam("orderNumber", response.getOderNumber())
+        MvcResult getAction = mockMvc.perform(MockMvcRequestBuilders.get("/api/order/" + response.getOrderNumber())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links").exists())
                 .andReturn();
         OrderResponse responseGet = objectMapper.readValue(getAction.getResponse().getContentAsString(), OrderResponse.class);
 
         assertAll(
                 "Map summary to response",
-                () -> assertNotNull(responseGet.getOderNumber(), "Order number should not be null"),
+                () -> assertNotNull(responseGet.getOrderNumber(), "Order number should not be null"),
                 () -> assertEquals("DRAFT", responseGet.getState(), "State should be \"draft\""),
                 () -> assertNotNull(responseGet.getOrderItems().get(0).getId(), "Item should return id"),
                 () -> assertEquals(2, responseGet.getOrderItems().get(0).getCount(), "Count should be 2"),
@@ -192,8 +190,7 @@ class OrderServiceApplicationTests {
 
     @Test
     void shouldNotGetOrderBecauseOfWrongOrderNumber() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/api/order")
-                        .queryParam("orderNumber", "dummyOrder")
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/order/dummyOrder")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("Order which number: dummyOrder not exist")));
@@ -205,8 +202,7 @@ class OrderServiceApplicationTests {
     void shouldDeleteOrder() throws Exception {
         OrderResponse response = createOrderAndReturnResponse();
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/order")
-                        .queryParam("orderNumber", response.getOderNumber())
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/order/" + response.getOrderNumber())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -215,8 +211,7 @@ class OrderServiceApplicationTests {
 
     @Test
     void shouldNotDeleteOrderBecauseOfWrongOrderNumber() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.delete("/api/order")
-                        .queryParam("orderNumber", "dummyOrder")
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/order/dummyOrder")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string(containsString("Order which number: dummyOrder not exist, so can't be deleted")));

@@ -60,7 +60,7 @@ class OrderMapperTest {
 
         assertAll(
                 "Map summary to response",
-                () -> assertEquals("test123", result.getOderNumber(), "Order number should be \"test123\""),
+                () -> assertEquals("test123", result.getOrderNumber(), "Order number should be \"test123\""),
                 () -> assertEquals("DRAFT", result.getState(), "State should be \"draft\""),
                 () -> assertEquals(12, result.getOrderItems().get(0).getCount(), "Count should be 12"),
                 () -> assertEquals("item name", result.getOrderItems().get(0).getItemName(), "Item name should be \"item name\""),
