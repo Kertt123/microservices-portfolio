@@ -1,0 +1,150 @@
+{
+	"info": {
+		"_postman_id": "3cf3294c-b23f-45ec-8bde-0409284a50a4",
+		"name": "Microservice Portfolio",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "23929431"
+	},
+	"item": [
+		{
+			"name": "Order service",
+			"item": [
+				{
+					"name": "New order draft",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\",\n            \"itemRef\": \"ref1\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8081/api/order/draft",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"order",
+								"draft"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update order draft",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\",\n            \"itemRef\": \"ref2\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8081/api/order/draft?orderNumber=c33302c6-f674-4187-bb92-92b3833bc0e7",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"order",
+								"draft"
+							],
+							"query": [
+								{
+									"key": "orderNumber",
+									"value": "c33302c6-f674-4187-bb92-92b3833bc0e7"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get order by number",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8081/api/order?orderNumber=c33302c6-f674-4187-bb92-92b3833bc0e7",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"order"
+							],
+							"query": [
+								{
+									"key": "orderNumber",
+									"value": "c33302c6-f674-4187-bb92-92b3833bc0e7"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove order",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8081/api/order?orderNumber=c33302c6-f674-4187-bb92-92b3833bc0e7",
+							"host": [
+								"localhost"
+							],
+							"port": "8081",
+							"path": [
+								"api",
+								"order"
+							],
+							"query": [
+								{
+									"key": "orderNumber",
+									"value": "c33302c6-f674-4187-bb92-92b3833bc0e7"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
