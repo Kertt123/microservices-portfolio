@@ -3,9 +3,19 @@ services:
     container_name: mongo
     image: mongo:4.4.14-rc0-focal
     restart: always
+    environment:
+      MONGO_INIT_DB_ROOT_USERNAME: serkowski
+      MONGO_INIT_DB_ROOT_PASSWORD: password
     ports:
       - "27017:27017"
     expose:
       - "27017"
     volumes:
-      - ./mongo-data:/data/db
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
+
+networks:
+  node-network:
+    driver: bridge

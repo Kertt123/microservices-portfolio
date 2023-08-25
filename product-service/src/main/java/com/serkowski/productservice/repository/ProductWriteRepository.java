@@ -5,5 +5,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import java.util.UUID;
 
-public interface ProductReadRepository extends MongoRepository<Product, String> {
+public interface ProductWriteRepository extends MongoRepository<Product, String> {
 }
