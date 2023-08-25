@@ -31,14 +31,15 @@ public class ProductController {
         return response;
     }
 
-    //    @PutMapping("/draft/{orderNumber}")
-//    @ResponseStatus(HttpStatus.OK)
-//    public ProductDto updateOrderDraft(@RequestBody ProductD+to orderRequest, @PathVariable String orderNumber) {
-//        OrderResponse response = productService.updateOrder(orderRequest, orderNumber);
-//        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
-//        return response;
-//    }
-//
+    @PutMapping
+    @ResponseStatus(HttpStatus.OK)
+    public ProductDto updateProduct(@RequestBody ProductDto productRequest) {
+        ProductDto response = productService.updateProduct(productRequest);
+        response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
+        return response;
+    }
+
+    //
     @GetMapping("/{productId}")
     @ResponseStatus(HttpStatus.OK)
     public ProductDto getProduct(@PathVariable String productId) {
@@ -47,13 +48,13 @@ public class ProductController {
         return response;
     }
 
-    //
-//    @DeleteMapping("/{orderNumber}")
-//    @ResponseStatus(HttpStatus.OK)
-//    public void deleteOrder(@PathVariable String orderNumber) {
-//        productService.deleteOrderByOrderNumber(orderNumber);
-//    }
-//
+
+    @DeleteMapping("/{productId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void deleteProduct(@PathVariable String productId) {
+        productService.deleteProductById(productId);
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ErrorHandlerResponse handleValidationExceptions(MethodArgumentNotValidException ex) {

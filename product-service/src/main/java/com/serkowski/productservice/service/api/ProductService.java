@@ -13,15 +13,14 @@ public interface ProductService {
      */
     ProductDto placeProduct(ProductDto productRequest);
 
-//    /**
-//     * Update already existing order draft
-//     *
-//     * @param orderRequest request
-//     * @param orderNumber  order number
-//     * @return {@link OrderResponse}
-//     */
-//    OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber);
-//
+    /**
+     * Update already existing product
+     *
+     * @param productRequest request
+     * @return {@link ProductDto}
+     */
+    ProductDto updateProduct(ProductDto productRequest);
+
     /**
      * Get product by id
      *
@@ -29,12 +28,12 @@ public interface ProductService {
      * @return {@link ProductDto}
      */
     ProductDto getProductById(String productId);
-//
-//    /**
-//     * Delete order by order number.
-//     *
-//     * @param orderNumber order number
-//     */
-//    void deleteOrderByOrderNumber(String orderNumber);
+
+    /**
+     * Delete product by id
+     *
+     * @param productId product id
+     */
+    void deleteProductById(String productId);
 
 }

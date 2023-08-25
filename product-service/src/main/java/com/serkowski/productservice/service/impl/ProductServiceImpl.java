@@ -36,10 +36,37 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductDto updateProduct(ProductDto productRequest) {
+        if (productRequest.getId() == null) {
+            throw new ProductNotFound("Product can't be update because id field is empty");
+        }
+        return productReadRepository.findById(productRequest.getId().toString())
+                .map(product -> {
+                    product.setName(productRequest.getName());
+                    product.setDescription(productRequest.getDescription());
+                    product.setCategories(productRequest.getCategories());
+                    product.setTags(productRequest.getTags());
+                    product.setPrice(productRequest.getPrice());
+                    product.setSpecification(productRequest.getSpecification());
+                    return productWriteRepository.save(product);
+                })
+                .map(this::mapToDto)
+                .orElseThrow(() -> new ProductNotFound("Product which id: " + productRequest.getId().toString() + " not exist, so can't be updated"));
+    }
+
+    @Override
     public ProductDto getProductById(String productId) {
         return productReadRepository.findById(productId)
                 .map(this::mapToDto)
                 .orElseThrow(() -> new ProductNotFound("Product which id: " + productId + " not exist"));
+    }
+
+    @Override
+    public void deleteProductById(String productId) {
+        productReadRepository.findById(productId)
+                .ifPresentOrElse(productWriteRepository::delete, () -> {
+                    throw new ProductNotFound("Product which id: " + productId + " not exist, so can't be deleted");
+                });
     }
 
     private ProductDto mapToDto(Product productSave) {
