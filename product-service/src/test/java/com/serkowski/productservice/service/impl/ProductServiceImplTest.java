@@ -128,7 +128,7 @@ public class ProductServiceImplTest {
     }
 
     @Test
-    void shouldDeleteProductByOrderNumber() {
+    void shouldDeleteProductById() {
         when(productReadRepository.findById(eq("testNumber123"))).thenReturn(Optional.ofNullable(Product.builder()
                 .id(UUID.randomUUID().toString())
                 .build()));
