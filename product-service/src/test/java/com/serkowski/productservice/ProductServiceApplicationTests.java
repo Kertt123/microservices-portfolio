@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -17,239 +20,194 @@ import org.testcontainers.junit.jupiter.Container;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 class ProductServiceApplicationTests {
 
-		@Container
-		static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
-		@Autowired
-		private MockMvc mockMvc;
-		@Autowired
-		private ObjectMapper objectMapper;
-		@Autowired
-		private ProductReadRepository productReadRepository;
-		@Autowired
-		private ProductWriteRepository productWriteRepository;
+    @Container
+    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private ObjectMapper objectMapper;
+    @Autowired
+    private ProductReadRepository productReadRepository;
+    @Autowired
+    private ProductWriteRepository productWriteRepository;
 
-		@BeforeAll
-		static void beforeAll() {
-			mongoDBContainer.start();
-		}
+    @BeforeAll
+    static void beforeAll() {
+        mongoDBContainer.start();
+    }
 
-		@AfterAll
-		static void afterAll() {
-			mongoDBContainer.stop();
-		}
+    @AfterAll
+    static void afterAll() {
+        mongoDBContainer.stop();
+    }
 
-		@BeforeEach
-		void clean() {
-			productWriteRepository.deleteAll();
-		}
+    @BeforeEach
+    void clean() {
+        productWriteRepository.deleteAll();
+    }
 
-		@Test
-		void shouldCreateOrder() throws Exception {
-			ProductDto productRequest = ProductDto.builder()
-					.name("name")
-					.price(BigDecimal.ONE)
-					.tags(List.of("tag1"))
-					.categories(List.of("category1"))
-					.description("desc")
-					.specification(Map.of("test1", "test2"))
-					.build();
-			String productRequestString = objectMapper.writeValueAsString(productRequest);
+    @DynamicPropertySource
+    static void mongoDbProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
+    }
 
-			mockMvc.perform(MockMvcRequestBuilders.post("/api/product")
-							.contentType(MediaType.APPLICATION_JSON)
-							.content(productRequestString))
-					.andExpect(status().isCreated())
-					.andExpect(jsonPath("$._links").exists());
 
-			Assertions.assertEquals(1, productReadRepository.findAll().size());
-		}
-//
-//		@Test
-//		void shouldFailDuringOrderCrateBecauseOfMissingItems() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setAddressDto(mapAddress());
-//			String productRequestString = objectMapper.writeValueAsString(orderRequest);
-//
-//			mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(productRequestString))
-//					.andExpect(status().isBadRequest())
-//					.andExpect(content().string(containsString("Order items can't be empty")));
-//		}
-//
-//		@Test
-//		void shouldFailDuringOrderCrateBecauseOfMissingAddress() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setOrderItems(mapOrderItems());
-//			String productRequestString = objectMapper.writeValueAsString(orderRequest);
-//
-//			mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(productRequestString))
-//					.andExpect(status().isBadRequest())
-//					.andExpect(content().string(containsString("Address information can't be empty")));
-//		}
-//
-//		@Test
-//		void shouldFailDuringOrderCrateBecauseOfMissingInnerFields() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setOrderItems(List.of(OrderItemRequestDto.builder().build()));
-//			orderRequest.setAddressDto(AddressRequestDto.builder().build());
-//			String productRequestString = objectMapper.writeValueAsString(orderRequest);
-//
-//			mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(productRequestString))
-//					.andExpect(status().isBadRequest())
-//					.andExpect(content().string(containsString("Item reference can't be empty")))
-//					.andExpect(content().string(containsString("Item name can't be empty")))
-//					.andExpect(content().string(containsString("Item reference can't be empty")))
-//					.andExpect(content().string(containsString("The address line of the address can't be empty")))
-//					.andExpect(content().string(containsString("The city of the address can't be empty")))
-//					.andExpect(content().string(containsString("The country of the address can't be empty")));
-//		}
-//
-//		@Test
-//		void shouldUpdateOrder() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setOrderItems(mapOrderItems());
-//			orderRequest.setAddressDto(mapAddress());
-//			String productRequestString = objectMapper.writeValueAsString(orderRequest);
-//			MvcResult createAction = mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(productRequestString))
-//					.andReturn();
-//			OrderResponse response = objectMapper.readValue(createAction.getResponse().getContentAsString(), OrderResponse.class);
-//			orderRequest.getOrderItems().get(0).setItemName("afterUpdateName");
-//
-//			mockMvc.perform(MockMvcRequestBuilders.put("/api/order/draft/" + response.getOrderNumber())
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(objectMapper.writeValueAsString(orderRequest)))
-//					.andExpect(status().isOk())
-//					.andExpect(content().string(containsString("afterUpdateName")));
-//
-//			Assertions.assertEquals(1, orderReadRepository.findAll().size());
-//		}
-//
-//		@Test
-//		void shouldNotUpdateOrderBecauseOfWrongOrderNumber() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setOrderItems(mapOrderItems());
-//			orderRequest.setAddressDto(mapAddress());
-//
-//			mockMvc.perform(MockMvcRequestBuilders.put("/api/order/draft/dummyOrder")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(objectMapper.writeValueAsString(orderRequest)))
-//					.andExpect(status().isNotFound())
-//					.andExpect(content().string(containsString("Can't update order which is not exist for number: dummyOrder")));
-//
-//			Assertions.assertEquals(0, orderReadRepository.findAll().size());
-//		}
-//
-//		@Test
-//		void shouldGetOrder() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setOrderItems(mapOrderItems());
-//			orderRequest.setAddressDto(mapAddress());
-//			String productRequestString = objectMapper.writeValueAsString(orderRequest);
-//			MvcResult createAction = mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(productRequestString))
-//					.andReturn();
-//			OrderResponse response = objectMapper.readValue(createAction.getResponse().getContentAsString(), OrderResponse.class);
-//
-//			MvcResult getAction = mockMvc.perform(MockMvcRequestBuilders.get("/api/order/" + response.getOrderNumber())
-//							.contentType(MediaType.APPLICATION_JSON))
-//					.andExpect(status().isOk())
-//					.andExpect(jsonPath("$._links").exists())
-//					.andReturn();
-//			OrderResponse responseGet = objectMapper.readValue(getAction.getResponse().getContentAsString(), OrderResponse.class);
-//
-//			assertAll(
-//					"Map summary to response",
-//					() -> assertNotNull(responseGet.getOrderNumber(), "Order number should not be null"),
-//					() -> assertEquals("DRAFT", responseGet.getState(), "State should be \"draft\""),
-//					() -> assertNotNull(responseGet.getOrderItems().get(0).getId(), "Item should return id"),
-//					() -> assertEquals(2, responseGet.getOrderItems().get(0).getCount(), "Count should be 2"),
-//					() -> assertEquals("name1", responseGet.getOrderItems().get(0).getItemName(), "Item name should be \"name1\""),
-//					() -> assertEquals("ref1", responseGet.getOrderItems().get(0).getItemRef(), "Item reference should be \"ref1\""),
-//					() -> assertNotNull(responseGet.getAddress().getId(), "Address should return id"),
-//					() -> assertEquals("line1", responseGet.getAddress().getAddressLine1(), "First address line is \"line1\""),
-//					() -> assertEquals("line2", responseGet.getAddress().getAddressLine2(), "Second address line is \"line2\""),
-//					() -> assertEquals("city", responseGet.getAddress().getCity(), "City is \"city\""),
-//					() -> assertEquals("country", responseGet.getAddress().getCountry(), "Country is \"country\"")
-//			);
-//		}
-//
-//		@Test
-//		void shouldNotGetOrderBecauseOfWrongOrderNumber() throws Exception {
-//			mockMvc.perform(MockMvcRequestBuilders.get("/api/order/dummyOrder")
-//							.contentType(MediaType.APPLICATION_JSON))
-//					.andExpect(status().isNotFound())
-//					.andExpect(content().string(containsString("Order which number: dummyOrder not exist")));
-//
-//			Assertions.assertEquals(0, orderReadRepository.findAll().size());
-//		}
-//
-//		@Test
-//		void shouldDeleteOrder() throws Exception {
-//			OrderResponse response = createOrderAndReturnResponse();
-//
-//			mockMvc.perform(MockMvcRequestBuilders.delete("/api/order/" + response.getOrderNumber())
-//							.contentType(MediaType.APPLICATION_JSON))
-//					.andExpect(status().isOk());
-//
-//			Assertions.assertEquals(0, orderReadRepository.findAll().size());
-//		}
-//
-//		@Test
-//		void shouldNotDeleteOrderBecauseOfWrongOrderNumber() throws Exception {
-//			mockMvc.perform(MockMvcRequestBuilders.delete("/api/order/dummyOrder")
-//							.contentType(MediaType.APPLICATION_JSON))
-//					.andExpect(status().isNotFound())
-//					.andExpect(content().string(containsString("Order which number: dummyOrder not exist, so can't be deleted")));
-//
-//			Assertions.assertEquals(0, orderReadRepository.findAll().size());
-//		}
-//
-//		private OrderResponse createOrderAndReturnResponse() throws Exception {
-//			OrderRequest orderRequest = new OrderRequest();
-//			orderRequest.setOrderItems(mapOrderItems());
-//			orderRequest.setAddressDto(mapAddress());
-//			String productRequestString = objectMapper.writeValueAsString(orderRequest);
-//			MvcResult createAction = mockMvc.perform(MockMvcRequestBuilders.post("/api/order/draft")
-//							.contentType(MediaType.APPLICATION_JSON)
-//							.content(productRequestString))
-//					.andReturn();
-//			return objectMapper.readValue(createAction.getResponse().getContentAsString(), OrderResponse.class);
-//		}
-//
-//		private List<OrderItemRequestDto> mapOrderItems() {
-//			return List.of(OrderItemRequestDto.builder()
-//					.count(2)
-//					.itemRef("ref1")
-//					.itemName("name1")
-//					.build());
-//		}
-//
-//		private AddressRequestDto mapAddress() {
-//			return AddressRequestDto.builder()
-//					.addressLine1("line1")
-//					.addressLine2("line2")
-//					.city("city")
-//					.country("country")
-//					.build();
-//
-//		}
-//	}
-//	}
+    @Test
+    void shouldCreateProduct() throws Exception {
+        ProductDto productRequest = ProductDto.builder()
+                .name("name")
+                .price(BigDecimal.ONE)
+                .tags(List.of("tag1"))
+                .categories(List.of("category1"))
+                .description("desc")
+                .specification(Map.of("test1", "test2"))
+                .build();
+        String productRequestString = objectMapper.writeValueAsString(productRequest);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/product")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(productRequestString))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$._links").exists());
+
+        assertEquals(1, productReadRepository.findAll().size());
+    }
+
+
+    @Test
+    void shouldFailDuringProductCrateBecauseOfMissingInnerFields() throws Exception {
+        ProductDto productRequest = ProductDto.builder()
+                .build();
+        String productRequestString = objectMapper.writeValueAsString(productRequest);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/product")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(productRequestString))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("Product name can't be empty")))
+                .andExpect(content().string(containsString("Product description can't be empty")))
+                .andExpect(content().string(containsString("Product need category list can't be empty")))
+                .andExpect(content().string(containsString("Product tag list can't be empty")))
+                .andExpect(content().string(containsString("Product need to have a price")))
+                .andExpect(content().string(containsString("Product specification should not be empty")));
+    }
+
+    @Test
+    void shouldUpdateProduct() throws Exception {
+        ProductDto response = createProductAndReturnResponse(ProductDto.builder());
+        response.setName("nameAfter");
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/product")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(response)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("nameAfter")));
+
+        assertEquals(1, productReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldNotUpdateProductBecauseOfWrongId() throws Exception {
+        ProductDto productRequest = ProductDto.builder()
+                .id(UUID.randomUUID())
+                .name("name")
+                .price(BigDecimal.ONE)
+                .tags(List.of("tag1"))
+                .categories(List.of("category1"))
+                .description("desc")
+                .specification(Map.of("test1", "test2"))
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.put("/api/product")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(productRequest)))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Product which id: " + productRequest.getId().toString() + " not exist, so can't be updated")));
+
+        assertEquals(0, productReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldGetProduct() throws Exception {
+        ProductDto response = createProductAndReturnResponse(ProductDto.builder()
+                .id(UUID.randomUUID()));
+
+        MvcResult getAction = mockMvc.perform(MockMvcRequestBuilders.get("/api/product/" + response.getId().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links").exists())
+                .andReturn();
+        ProductDto responseGet = objectMapper.readValue(getAction.getResponse().getContentAsString(), ProductDto.class);
+
+        assertAll(
+                "Map summary to response",
+                () -> assertNotNull(responseGet.getId(), "Product id should not be null"),
+                () -> assertEquals("name", responseGet.getName(), "Name should be \"name\""),
+                () -> assertEquals(BigDecimal.ONE, responseGet.getPrice(), "Price should be \"1.00\""),
+                () -> assertEquals("tag1", responseGet.getTags().get(0), "Tag should be \"tag1\""),
+                () -> assertEquals("category1", responseGet.getCategories().get(0), "Category should be \"category1\""),
+                () -> assertEquals("desc", responseGet.getDescription(), "Description should be \"desc\""),
+                () -> assertTrue(responseGet.getSpecification().containsKey("test1"), "Specification contains key \"test1\""),
+                () -> assertEquals("test2", responseGet.getSpecification().get("test1"), "Specification contains key \"test1\" with value \"test2\"")
+        );
+    }
+
+    @Test
+    void shouldNotGetProductBecauseOfId() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/product/dummyProduct")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Product which id: dummyProduct not exist")));
+
+        Assertions.assertEquals(0, productReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldDeleteProduct() throws Exception {
+        ProductDto response = createProductAndReturnResponse(ProductDto.builder());
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/product/" + response.getId().toString())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+
+        Assertions.assertEquals(0, productReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldNotDeleteProductBecauseOfWrongId() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/product/dummyId")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Product which id: dummyId not exist, so can't be deleted")));
+
+        Assertions.assertEquals(0, productReadRepository.findAll().size());
+    }
+
+    private ProductDto createProductAndReturnResponse(ProductDto.ProductDtoBuilder builder) throws Exception {
+        ProductDto productRequest = builder
+                .name("name")
+                .price(BigDecimal.ONE)
+                .tags(List.of("tag1"))
+                .categories(List.of("category1"))
+                .description("desc")
+                .specification(Map.of("test1", "test2"))
+                .build();
+
+        String productRequestString = objectMapper.writeValueAsString(productRequest);
+        MvcResult createAction = mockMvc.perform(MockMvcRequestBuilders.post("/api/product")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(productRequestString))
+                .andReturn();
+        return objectMapper.readValue(createAction.getResponse().getContentAsString(), ProductDto.class);
+    }
 }
