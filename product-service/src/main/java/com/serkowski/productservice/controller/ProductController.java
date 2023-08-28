@@ -3,6 +3,7 @@ package com.serkowski.productservice.controller;
 import com.serkowski.productservice.dto.ErrorHandlerItem;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
 import com.serkowski.productservice.dto.ProductDto;
+import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.service.api.ProductService;
 import jakarta.validation.Valid;
@@ -29,6 +30,12 @@ public class ProductController {
         ProductDto response = productService.placeProduct(productRequest);
         response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
         return response;
+    }
+
+    @PostMapping("/{productId}/add-item")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProductItemDto addItem(@PathVariable String productId, @Valid @RequestBody ProductItemDto productRequest) {
+        return productService.addItem(productId, productRequest);
     }
 
     @PutMapping

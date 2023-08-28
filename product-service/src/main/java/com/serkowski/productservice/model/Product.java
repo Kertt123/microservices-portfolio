@@ -2,7 +2,10 @@ package com.serkowski.productservice.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,4 +27,7 @@ public class Product {
     private List<String> tags;
     private BigDecimal price;
     private Map<String, String> specification;
+
+    @DocumentReference(lazy = true)
+    List<ProductItem> items;
 }
