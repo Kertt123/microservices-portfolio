@@ -54,25 +54,4 @@ public class ProductController {
     public void deleteProduct(@PathVariable String productId) {
         productService.deleteProductById(productId);
     }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorHandlerResponse handleValidationExceptions(MethodArgumentNotValidException ex) {
-        ErrorHandlerResponse response = new ErrorHandlerResponse();
-        ex.getBindingResult().getAllErrors().forEach((error) ->
-                response.getErrors().add(ErrorHandlerItem.builder()
-                        .fieldName(((FieldError) error).getField())
-                        .errorMessage(error.getDefaultMessage())
-                        .build())
-        );
-        return response;
-    }
-
-    @ExceptionHandler(ProductNotFound.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorHandlerResponse handleProductNotFound(ProductNotFound ex) {
-        ErrorHandlerResponse response = new ErrorHandlerResponse();
-        response.setErrorMessage(ex.getMessage());
-        return response;
-    }
 }

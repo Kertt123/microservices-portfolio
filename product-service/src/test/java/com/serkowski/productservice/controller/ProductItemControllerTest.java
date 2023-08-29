@@ -27,8 +27,7 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -77,8 +76,8 @@ class ProductItemControllerTest {
         mockMvc.perform(MockMvcRequestBuilders.post("/api/product/" + productAndReturnResponse.getId().toString() + "/add-item")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(productItemDto)))
-                .andExpect(status().isCreated());
-//                .andExpect(jsonPath("$._links").exists());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._links").exists());
 
         assertEquals(1, productItemReadRepository.findAll().size());
     }

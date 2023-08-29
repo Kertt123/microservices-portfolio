@@ -1,18 +1,23 @@
 package com.serkowski.productservice.service.impl;
 
 import com.serkowski.productservice.dto.ProductItemDto;
+import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.ProductItem;
 import com.serkowski.productservice.model.error.ProductNotFound;
+import com.serkowski.productservice.model.error.ReservationItemsException;
 import com.serkowski.productservice.repository.product.ProductReadRepository;
 import com.serkowski.productservice.repository.product.ProductWriteRepository;
+import com.serkowski.productservice.repository.product.item.ProductItemReadRepository;
 import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
 import com.serkowski.productservice.service.api.ProductItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +28,7 @@ public class ProductItemServiceImpl implements ProductItemService {
 
     private final ProductReadRepository productReadRepository;
     private final ProductWriteRepository productWriteRepository;
+    private final ProductItemReadRepository productItemReadRepository;
     private final ProductItemWriteRepository productItemWriteRepository;
 
     @Override
@@ -46,6 +52,40 @@ public class ProductItemServiceImpl implements ProductItemService {
                 })
                 .map(this::mapToDto)
                 .orElseThrow(() -> new ProductNotFound("Product which id: " + productId + " not exist"));
+    }
+
+    @Override
+    public ProductItemDto getItemById(String productItemId) {
+        return productItemReadRepository.findById(productItemId)
+                .map(this::mapToDto)
+                .orElseThrow(() -> new ProductNotFound("Product item which id: " + productItemId + " not exist"));
+    }
+
+    @Override
+    public void reserveItems(ReserveItemsDto reserveItemsDto) {
+        List<ProductItem> reservedItems = new ArrayList<>();
+        if (!CollectionUtils.isEmpty(reserveItemsDto.getIds())) {
+            reservedItems.addAll(productItemReadRepository.findByIds(reserveItemsDto.getIds())
+                    .stream()
+                    .map(this::markItemAsReserved)
+                    .toList());
+        }
+        if (!CollectionUtils.isEmpty(reserveItemsDto.getSerialNumbers())) {
+            reservedItems.addAll(productItemReadRepository.findBySerialNumbers(reserveItemsDto.getSerialNumbers())
+                    .stream()
+                    .map(this::markItemAsReserved)
+                    .toList());
+        }
+        if (CollectionUtils.isEmpty(reservedItems)) {
+            throw new ReservationItemsException("To reserve the products the ids or serial numbers need to be provided");
+        }
+        productItemWriteRepository.saveAll(reservedItems);
+    }
+
+    private ProductItem markItemAsReserved(ProductItem productItem) {
+        productItem.setAvailability(Availability.RESERVED);
+        productItem.setReservationTimeDate(LocalDateTime.now());
+        return productItem;
     }
 
     private ProductItemDto mapToDto(ProductItem productItem) {
