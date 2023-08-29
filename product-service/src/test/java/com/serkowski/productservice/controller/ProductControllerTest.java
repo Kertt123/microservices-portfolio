@@ -1,4 +1,4 @@
-package com.serkowski.productservice;
+package com.serkowski.productservice.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serkowski.productservice.dto.ProductDto;
@@ -28,7 +28,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-class ProductServiceApplicationTests {
+class ProductControllerTest {
 
     @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");

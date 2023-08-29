@@ -36,13 +36,4 @@ public interface ProductService {
      * @param productId product id
      */
     void deleteProductById(String productId);
-
-    /**
-     * Add item to the product.
-     *
-     * @param productId          product Id
-     * @param productItemRequest product item request
-     * @return {@link ProductItemDto}
-     */
-    ProductItemDto addItem(String productId, ProductItemDto productItemRequest);
 }

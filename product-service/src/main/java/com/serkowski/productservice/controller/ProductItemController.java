@@ -3,7 +3,9 @@ package com.serkowski.productservice.controller;
 import com.serkowski.productservice.dto.ErrorHandlerItem;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
 import com.serkowski.productservice.dto.ProductDto;
+import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.model.error.ProductNotFound;
+import com.serkowski.productservice.service.api.ProductItemService;
 import com.serkowski.productservice.service.api.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,40 +21,14 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 @RequestMapping("/api/product")
 @RequiredArgsConstructor
 @Slf4j
-public class ProductController {
+public class ProductItemController {
 
-    private final ProductService productService;
+    private final ProductItemService productService;
 
-    @PostMapping
+    @PostMapping("/{productId}/add-item")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductDto placeProduct(@Valid @RequestBody ProductDto productRequest) {
-        ProductDto response = productService.placeProduct(productRequest);
-        response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
-        return response;
-    }
-
-    @PutMapping
-    @ResponseStatus(HttpStatus.OK)
-    public ProductDto updateProduct(@RequestBody ProductDto productRequest) {
-        ProductDto response = productService.updateProduct(productRequest);
-        response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
-        return response;
-    }
-
-    //
-    @GetMapping("/{productId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ProductDto getProduct(@PathVariable String productId) {
-        ProductDto response = productService.getProductById(productId);
-        response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
-        return response;
-    }
-
-
-    @DeleteMapping("/{productId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteProduct(@PathVariable String productId) {
-        productService.deleteProductById(productId);
+    public ProductItemDto addItem(@PathVariable String productId, @Valid @RequestBody ProductItemDto productRequest) {
+        return productService.addItem(productId, productRequest);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
