@@ -2,8 +2,8 @@ package com.serkowski.productservice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serkowski.productservice.dto.ProductDto;
-import com.serkowski.productservice.repository.ProductReadRepository;
-import com.serkowski.productservice.repository.ProductWriteRepository;
+import com.serkowski.productservice.repository.product.ProductReadRepository;
+import com.serkowski.productservice.repository.product.ProductWriteRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;

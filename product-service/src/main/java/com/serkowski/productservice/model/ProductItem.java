@@ -2,7 +2,9 @@ package com.serkowski.productservice.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DocumentReference;
 
 import java.time.LocalDateTime;
 
@@ -20,4 +22,7 @@ public class ProductItem {
     private String serialNumber;
     private LocalDateTime updateDate;
     private LocalDateTime reservationTimeDate;
+    @DocumentReference(lazy = true, lookup = "{ 'productId' : ?#{#self._id} }")
+    @ReadOnlyProperty
+    private Product customer;
 }

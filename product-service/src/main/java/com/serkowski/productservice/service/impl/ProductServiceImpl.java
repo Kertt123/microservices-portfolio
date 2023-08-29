@@ -6,8 +6,9 @@ import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.ProductItem;
 import com.serkowski.productservice.model.error.ProductNotFound;
-import com.serkowski.productservice.repository.ProductReadRepository;
-import com.serkowski.productservice.repository.ProductWriteRepository;
+import com.serkowski.productservice.repository.product.ProductReadRepository;
+import com.serkowski.productservice.repository.product.ProductWriteRepository;
+import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
 import com.serkowski.productservice.service.api.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductReadRepository productReadRepository;
     private final ProductWriteRepository productWriteRepository;
+    private final ProductItemWriteRepository productItemWriteRepository;
 
 
     @Override
@@ -78,11 +80,12 @@ public class ProductServiceImpl implements ProductService {
         return productReadRepository.findById(productId)
                 .map(product -> {
                     ProductItem item = ProductItem.builder().id(UUID.randomUUID().toString()).availability(Availability.AVAILABLE).serialNumber(productItemRequest.getSerialNumber()).build();
-                    if (product.getItems() == null){
+                    if (product.getItems() == null) {
                         product.setItems(List.of(item));
                     } else {
                         product.getItems().add(item);
                     }
+                    productItemWriteRepository.save(item);
                     productWriteRepository.save(product);
                     return ProductItemDto.builder()
                             .serialNumber(item.getSerialNumber())
