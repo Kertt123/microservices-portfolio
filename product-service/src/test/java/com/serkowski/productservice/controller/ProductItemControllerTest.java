@@ -26,7 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -95,6 +96,41 @@ class ProductItemControllerTest {
                 .andExpect(content().string(containsString("Product which id: dummyId not exist")));
 
         assertEquals(0, productItemReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldGetProduct() throws Exception {
+        ProductDto productAndReturnResponse = createProductAndReturnResponse();
+
+        ProductItemDto productItemDto = ProductItemDto.builder()
+                .serialNumber("serialNumber1")
+                .build();
+
+        MvcResult addProductActionResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/product/" + productAndReturnResponse.getId().toString() + "/add-item")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(productItemDto)))
+                .andReturn();
+
+        ProductItemDto itemDto = objectMapper.readValue(addProductActionResult.getResponse().getContentAsString(), ProductItemDto.class);
+
+        MvcResult getProductActionResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/product/item/" + itemDto.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(productItemDto)))
+                .andReturn();
+
+        ProductItemDto getResultDto = objectMapper.readValue(getProductActionResult.getResponse().getContentAsString(), ProductItemDto.class);
+
+//        assertAll(
+//                "Map summary to response",
+//                () -> assertNotNull(responseGet.getId(), "Product id should not be null"),
+//                () -> assertEquals("name", responseGet.getName(), "Name should be \"name\""),
+//                () -> assertEquals(BigDecimal.ONE, responseGet.getPrice(), "Price should be \"1.00\""),
+//                () -> assertEquals("tag1", responseGet.getTags().get(0), "Tag should be \"tag1\""),
+//                () -> assertEquals("category1", responseGet.getCategories().get(0), "Category should be \"category1\""),
+//                () -> assertEquals("desc", responseGet.getDescription(), "Description should be \"desc\""),
+//                () -> assertTrue(responseGet.getSpecification().containsKey("test1"), "Specification contains key \"test1\""),
+//                () -> assertEquals("test2", responseGet.getSpecification().get("test1"), "Specification contains key \"test1\" with value \"test2\"")
+//        );
     }
 
     private ProductDto createProductAndReturnResponse() throws Exception {
