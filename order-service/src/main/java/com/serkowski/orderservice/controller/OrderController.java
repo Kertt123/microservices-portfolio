@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
@@ -26,26 +27,26 @@ public class OrderController {
 
     @PostMapping("/draft")
     @ResponseStatus(HttpStatus.CREATED)
-    public OrderResponse placeOrderDraft(@Valid @RequestBody OrderRequest orderRequest) {
+    public Mono<OrderResponse> placeOrderDraft(@Valid @RequestBody OrderRequest orderRequest) {
         OrderResponse response = orderService.placeOrderDraft(orderRequest);
         response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
-        return response;
+        return Mono.just(response);
     }
 
     @PutMapping("/draft/{orderNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public OrderResponse updateOrderDraft(@RequestBody OrderRequest orderRequest, @PathVariable String orderNumber) {
+    public Mono<OrderResponse> updateOrderDraft(@RequestBody OrderRequest orderRequest, @PathVariable String orderNumber) {
         OrderResponse response = orderService.updateOrder(orderRequest, orderNumber);
         response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
-        return response;
+        return Mono.just(response);
     }
 
     @GetMapping("/{orderNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public OrderResponse getOrder(@PathVariable String orderNumber) {
+    public Mono<OrderResponse> getOrder(@PathVariable String orderNumber) {
         OrderResponse response = orderService.getOrderByOrderNumber(orderNumber);
         response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
-        return response;
+        return Mono.just(response);
     }
 
     @DeleteMapping("/{orderNumber}")
@@ -56,7 +57,7 @@ public class OrderController {
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ErrorHandlerResponse handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public Mono<ErrorHandlerResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
         ex.getBindingResult().getAllErrors().forEach((error) ->
                 response.getErrors().add(ErrorHandlerItem.builder()
@@ -64,14 +65,14 @@ public class OrderController {
                         .errorMessage(error.getDefaultMessage())
                         .build())
         );
-        return response;
+        return Mono.just(response);
     }
 
     @ExceptionHandler(OrderNotFound.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorHandlerResponse handleOrderNotFound(OrderNotFound ex) {
+    public Mono<ErrorHandlerResponse> handleOrderNotFound(OrderNotFound ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
         response.setErrorMessage(ex.getMessage());
-        return response;
+        return Mono.just(response);
     }
 }
