@@ -3,8 +3,12 @@ package com.serkowski.productservice.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.serkowski.productservice.dto.ProductDto;
 import com.serkowski.productservice.dto.ProductItemDto;
+import com.serkowski.productservice.dto.request.ReserveItemsDto;
+import com.serkowski.productservice.model.Availability;
+import com.serkowski.productservice.model.ProductItem;
 import com.serkowski.productservice.repository.product.ProductWriteRepository;
 import com.serkowski.productservice.repository.product.item.ProductItemReadRepository;
+import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +31,6 @@ import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
@@ -44,6 +47,8 @@ class ProductItemControllerTest {
     private ProductItemReadRepository productItemReadRepository;
     @Autowired
     private ProductWriteRepository productWriteRepository;
+    @Autowired
+    private ProductItemWriteRepository productItemWriteRepository;
 
     @BeforeAll
     static void beforeAll() {
@@ -58,6 +63,7 @@ class ProductItemControllerTest {
     @BeforeEach
     void clean() {
         productWriteRepository.deleteAll();
+        productItemWriteRepository.deleteAll();
     }
 
     @DynamicPropertySource
@@ -106,12 +112,7 @@ class ProductItemControllerTest {
                 .serialNumber("serialNumber1")
                 .build();
 
-        MvcResult addProductActionResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/product/" + productAndReturnResponse.getId().toString() + "/add-item")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(productItemDto)))
-                .andReturn();
-
-        ProductItemDto itemDto = objectMapper.readValue(addProductActionResult.getResponse().getContentAsString(), ProductItemDto.class);
+        ProductItemDto itemDto = addItemAndReturnResponse(productAndReturnResponse, productItemDto);
 
         MvcResult getProductActionResult = mockMvc.perform(MockMvcRequestBuilders.get("/api/product/item/" + itemDto.getId())
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,17 +121,94 @@ class ProductItemControllerTest {
 
         ProductItemDto getResultDto = objectMapper.readValue(getProductActionResult.getResponse().getContentAsString(), ProductItemDto.class);
 
-//        assertAll(
-//                "Map summary to response",
-//                () -> assertNotNull(responseGet.getId(), "Product id should not be null"),
-//                () -> assertEquals("name", responseGet.getName(), "Name should be \"name\""),
-//                () -> assertEquals(BigDecimal.ONE, responseGet.getPrice(), "Price should be \"1.00\""),
-//                () -> assertEquals("tag1", responseGet.getTags().get(0), "Tag should be \"tag1\""),
-//                () -> assertEquals("category1", responseGet.getCategories().get(0), "Category should be \"category1\""),
-//                () -> assertEquals("desc", responseGet.getDescription(), "Description should be \"desc\""),
-//                () -> assertTrue(responseGet.getSpecification().containsKey("test1"), "Specification contains key \"test1\""),
-//                () -> assertEquals("test2", responseGet.getSpecification().get("test1"), "Specification contains key \"test1\" with value \"test2\"")
-//        );
+        assertAll(
+                "Verify product item dto",
+                () -> assertNotNull(getResultDto.getId(), "Product item id should not be null"),
+                () -> assertEquals("serialNumber1", getResultDto.getSerialNumber(), "Serial number should be \"serialNumber1\""),
+                () -> assertEquals("AVAILABLE", getResultDto.getAvailability(), "Availability should be \"AVAILABLE\"")
+        );
+    }
+
+    @Test
+    void shouldNotGetProductItemBecauseOfWrongId() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/product/dummyId")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(containsString("Product which id: dummyId not exist")));
+
+        assertEquals(0, productItemReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldReserveProductsByIds() throws Exception {
+        ProductDto productAndReturnResponse = createProductAndReturnResponse();
+
+        ProductItemDto productItemDto = ProductItemDto.builder()
+                .serialNumber("serialNumber1")
+                .build();
+
+        ProductItemDto itemDto = addItemAndReturnResponse(productAndReturnResponse, productItemDto);
+        ProductItemDto itemDto2 = addItemAndReturnResponse(productAndReturnResponse, productItemDto);
+
+        ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
+                .ids(List.of(itemDto.getId().toString(), itemDto2.getId().toString()))
+                .build();
+
+        MvcResult getProductActionResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/product/items/reserve")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reserveItemsDto)))
+                .andReturn();
+
+        assertAll(
+                "Verify reservation",
+                () -> assertEquals("success", getProductActionResult.getResponse().getContentAsString(), "Response should be \"success\""),
+                () -> assertTrue(productItemReadRepository.findById(itemDto.getId().toString()).isPresent(), "Product item should exist"),
+                () -> assertEquals(Availability.RESERVED, productItemReadRepository.findById(itemDto.getId().toString()).orElse(ProductItem.builder().build()).getAvailability(), "Availability should be \"RESERVED\""),
+                () -> assertTrue(productItemReadRepository.findById(itemDto2.getId().toString()).isPresent(), "Product item should exist"),
+                () -> assertEquals(Availability.RESERVED, productItemReadRepository.findById(itemDto2.getId().toString()).orElse(ProductItem.builder().build()).getAvailability(), "Availability should be \"RESERVED\"")
+        );
+    }
+
+    @Test
+    void shouldReserveProductsBySerialNumber() throws Exception {
+        ProductDto productAndReturnResponse = createProductAndReturnResponse();
+
+        ProductItemDto productItemDto = ProductItemDto.builder()
+                .serialNumber("serialNumber1")
+                .build();
+
+        ProductItemDto itemDto = addItemAndReturnResponse(productAndReturnResponse, productItemDto);
+        ProductItemDto itemDto2 = addItemAndReturnResponse(productAndReturnResponse, productItemDto);
+
+        ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
+                .serialNumbers(List.of(itemDto.getSerialNumber(), itemDto2.getSerialNumber()))
+                .build();
+
+        MvcResult getProductActionResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/product/items/reserve")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reserveItemsDto)))
+                .andReturn();
+
+        assertAll(
+                "Verify reservation",
+                () -> assertEquals("success", getProductActionResult.getResponse().getContentAsString(), "Response should be \"success\""),
+                () -> assertTrue(productItemReadRepository.findById(itemDto.getId().toString()).isPresent(), "Product item should exist"),
+                () -> assertEquals(Availability.RESERVED, productItemReadRepository.findById(itemDto.getId().toString()).orElse(ProductItem.builder().build()).getAvailability(), "Availability should be \"RESERVED\""),
+                () -> assertTrue(productItemReadRepository.findById(itemDto2.getId().toString()).isPresent(), "Product item should exist"),
+                () -> assertEquals(Availability.RESERVED, productItemReadRepository.findById(itemDto2.getId().toString()).orElse(ProductItem.builder().build()).getAvailability(), "Availability should be \"RESERVED\"")
+        );
+    }
+
+    @Test
+    void shouldNotReserveBecauseOfEmptyRequest() throws Exception {
+        ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
+                .build();
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/product/items/reserve")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(reserveItemsDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(containsString("To reserve the products the ids or serial numbers need to be provided")));
     }
 
     private ProductDto createProductAndReturnResponse() throws Exception {
@@ -151,4 +229,12 @@ class ProductItemControllerTest {
         return objectMapper.readValue(createAction.getResponse().getContentAsString(), ProductDto.class);
     }
 
+    private ProductItemDto addItemAndReturnResponse(ProductDto productAndReturnResponse, ProductItemDto productItemDto) throws Exception {
+        MvcResult addProductActionResult = mockMvc.perform(MockMvcRequestBuilders.post("/api/product/" + productAndReturnResponse.getId().toString() + "/add-item")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(productItemDto)))
+                .andReturn();
+
+        return objectMapper.readValue(addProductActionResult.getResponse().getContentAsString(), ProductItemDto.class);
+    }
 }
