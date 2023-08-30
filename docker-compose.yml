@@ -30,6 +30,29 @@ services:
       - "27017"
     volumes:
       - ./mongo-data:/data/db
+        
+  zookeeper-ms:
+    image: confluentinc/cp-zookeeper:7.0.1
+    hostname: zookeeper-ms
+    container_name: zookeeper-ms
+    networks:
+      - serkowski_net
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000      
+      
+  zoonavigator:
+    image: elkozmon/zoonavigator:latest
+    container_name: zoonavigator
+    hostname: zoonavigator
+    networks:
+      - serkowski_net
+    ports:
+      - "9000:9000"
+    environment:
+      AUTO_CONNECT_CONNECTION_STRING: zookeeper-ms:2181
 
   ## Order.java-Service Docker Compose Config
   order-service:
@@ -41,3 +64,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-order:5431/order-service
     depends_on:
       - postgres-order
+        
+networks:
+  serkowski_net:
+    driver: bridge        

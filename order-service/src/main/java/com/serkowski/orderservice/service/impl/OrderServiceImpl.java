@@ -13,11 +13,8 @@ import com.serkowski.orderservice.service.api.OrderMapper;
 import com.serkowski.orderservice.service.api.OrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
 
 @Service
 @RequiredArgsConstructor
@@ -28,22 +25,27 @@ public class OrderServiceImpl implements OrderService {
     private final OrderWriteRepository orderWriteRepository;
     private final OrderReadRepository orderReadRepository;
     private final OrderMapper orderMapper;
-    private final WebClient.Builder webClientBuilder;
+    private final ProductClient productClient;
 
     @Override
     public OrderResponse placeOrderDraft(OrderRequest orderRequest) {
         OrderSummary orderSummary = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
-        webClientBuilder.build().post()
-                .uri("http://localhost:8082/api/product/items/reserve")
-                .contentType(MediaType.APPLICATION_JSON)
-                .accept(MediaType.APPLICATION_JSON)
-                .body(BodyInserters.fromValue(ReserveItemsDto.builder()
-                        .ids(orderRequest.getOrderItems().stream().map(OrderItemRequestDto::getItemRef).toList())
-                        .build()))
-                .retrieve()
-                .bodyToMono(String.class)
-                .toFuture()
-                .thenAccept(response -> log.info("Reserve items response: " + response));
+        String s = productClient.reserveItems(ReserveItemsDto.builder()
+                .ids(orderRequest.getOrderItems().stream().map(OrderItemRequestDto::getItemRef).toList())
+                .build());
+        log.info("Reserve items response: " + s);
+
+//        webClientBuilder.build().post()
+//                .uri("http://localhost:8082/api/product/items/reserve")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .accept(MediaType.APPLICATION_JSON)
+//                .body(BodyInserters.fromValue(ReserveItemsDto.builder()
+//                        .ids(orderRequest.getOrderItems().stream().map(OrderItemRequestDto::getItemRef).toList())
+//                        .build()))
+//                .retrieve()
+//                .bodyToMono(String.class)
+//                .toFuture()
+//                .thenAccept(response -> log.info("Reserve items response: " + response));
 
         return orderMapper.map(orderSummary);
     }

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.Optional;
@@ -40,9 +41,12 @@ public class OrderServiceImplTest {
     @Mock
     private OrderMapper orderMapper;
 
+    @Mock
+    private WebClient.Builder builder;
+
     @BeforeEach
     void init() {
-        orderService = new OrderServiceImpl(orderWriteRepository, orderReadRepository, orderMapper);
+        orderService = new OrderServiceImpl(orderWriteRepository, orderReadRepository, orderMapper, builder);
     }
 
     @Test
