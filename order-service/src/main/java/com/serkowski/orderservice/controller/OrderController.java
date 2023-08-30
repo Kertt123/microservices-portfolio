@@ -28,9 +28,11 @@ public class OrderController {
     @PostMapping("/draft")
     @ResponseStatus(HttpStatus.CREATED)
     public Mono<OrderResponse> placeOrderDraft(@Valid @RequestBody OrderRequest orderRequest) {
-        OrderResponse response = orderService.placeOrderDraft(orderRequest);
-        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
-        return Mono.just(response);
+        return orderService.placeOrderDraft(orderRequest)
+                .map(orderResponse -> {
+                    orderResponse.add(linkTo(OrderController.class).slash(orderResponse.getOrderNumber()).withSelfRel());
+                    return orderResponse;
+                });
     }
 
     @PutMapping("/draft/{orderNumber}")

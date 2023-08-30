@@ -2,6 +2,7 @@ package com.serkowski.orderservice.service.api;
 
 import com.serkowski.orderservice.dto.request.OrderRequest;
 import com.serkowski.orderservice.dto.response.OrderResponse;
+import reactor.core.publisher.Mono;
 
 public interface OrderService {
 
@@ -12,7 +13,7 @@ public interface OrderService {
      * @param orderRequest request
      * @return {@link OrderResponse}
      */
-    OrderResponse placeOrderDraft(OrderRequest orderRequest);
+    Mono<OrderResponse> placeOrderDraft(OrderRequest orderRequest);
 
     /**
      * Update already existing order draft
