@@ -39,7 +39,7 @@ class ProductRepositoryTest {
     ProductService productService;
 
     @Container
-    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
+    static final MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
 
     @DynamicPropertySource
     static void mongoDbProperties(DynamicPropertyRegistry registry) {

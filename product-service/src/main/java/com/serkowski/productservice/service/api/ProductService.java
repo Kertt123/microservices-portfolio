@@ -1,7 +1,6 @@
 package com.serkowski.productservice.service.api;
 
 import com.serkowski.productservice.dto.ProductDto;
-import com.serkowski.productservice.dto.ProductItemDto;
 
 public interface ProductService {
 

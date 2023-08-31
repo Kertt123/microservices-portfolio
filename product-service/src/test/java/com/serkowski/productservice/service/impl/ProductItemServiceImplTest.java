@@ -125,7 +125,7 @@ class ProductItemServiceImplTest {
         );
         assertEquals("Product which id: 123 not exist", exception.getMessage());
     }
-
+Ľ
     @Test
     void shouldGetProductItem() {
         when(productItemReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(ProductItem.builder()
@@ -165,7 +165,7 @@ class ProductItemServiceImplTest {
                 .ids(List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
                 .build());
 
-        itemsCaptor.getValue().stream()
+        itemsCaptor.getValue()
                 .forEach(item -> assertEquals(Availability.RESERVED, item.getAvailability()));
     }
 
@@ -186,7 +186,7 @@ class ProductItemServiceImplTest {
                 .serialNumbers(List.of("serial1", "serial2"))
                 .build());
 
-        itemsCaptor.getValue().stream()
+        itemsCaptor.getValue()
                 .forEach(item -> assertEquals(Availability.RESERVED, item.getAvailability()));
     }
 
