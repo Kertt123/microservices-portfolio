@@ -1,16 +1,11 @@
 package com.serkowski.productservice.controller;
 
-import com.serkowski.productservice.dto.ErrorHandlerItem;
-import com.serkowski.productservice.dto.ErrorHandlerResponse;
 import com.serkowski.productservice.dto.ProductDto;
-import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.service.api.ProductService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
