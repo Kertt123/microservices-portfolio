@@ -30,36 +30,8 @@ class ProductControllerTest {
 
     @Autowired
     private WebTestClient webTestClient;
-
-    //    @Container
-//    static MongoDBContainer mongoDBContainer = new MongoDBContainer("mongo:4.4.2");
-//    @Autowired
-//    private ProductReadRepository productReadRepository;
-//    @Autowired
-//    private ProductWriteRepository productWriteRepository;
     @MockBean
     private ProductService productService;
-
-//    @BeforeAll
-//    static void beforeAll() {
-//        mongoDBContainer.start();
-//    }
-//
-//    @AfterAll
-//    static void afterAll() {
-//        mongoDBContainer.stop();
-//    }
-//
-//    @BeforeEach
-//    void clean() {
-//        productWriteRepository.deleteAll();
-//    }
-
-//    @DynamicPropertySource
-//    static void mongoDbProperties(DynamicPropertyRegistry registry) {
-//        registry.add("spring.data.mongodb.uri", mongoDBContainer::getReplicaSetUrl);
-//    }
-
 
     @Test
     void shouldCreateProduct() {
