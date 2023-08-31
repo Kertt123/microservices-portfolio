@@ -1,9 +1,11 @@
 package com.serkowski.productservice.service.impl;
 
+import com.mongodb.DuplicateKeyException;
 import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.ProductItem;
+import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
 import com.serkowski.productservice.repository.product.ProductReadRepository;
@@ -14,16 +16,19 @@ import com.serkowski.productservice.service.api.ProductItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional
 public class ProductItemServiceImpl implements ProductItemService {
 
     private final ProductReadRepository productReadRepository;
@@ -41,14 +46,15 @@ public class ProductItemServiceImpl implements ProductItemService {
                             .serialNumber(productItemRequest.getSerialNumber())
                             .updateDate(LocalDateTime.now())
                             .build();
-                    if (product.getItems() == null) {
-                        product.setItems(List.of(item));
-                    } else {
-                        product.getItems().add(item);
+                    Optional.ofNullable(product.getItems())
+                            .ifPresentOrElse(productItems -> productItems.add(item), () -> product.setItems(List.of(item)));
+                    try {
+                        ProductItem productItem = productItemWriteRepository.save(item);
+                        productWriteRepository.save(product);
+                        return productItem;
+                    } catch (DuplicateKeyException e) {
+                        throw new AddItemIndexException("Product with serial number: " + productItemRequest.getSerialNumber() + " already exist");
                     }
-                    ProductItem productItem = productItemWriteRepository.save(item);
-                    productWriteRepository.save(product);
-                    return productItem;
                 })
                 .map(this::mapToDto)
                 .orElseThrow(() -> new ProductNotFound("Product which id: " + productId + " not exist"));
@@ -83,6 +89,9 @@ public class ProductItemServiceImpl implements ProductItemService {
     }
 
     private ProductItem markItemAsReserved(ProductItem productItem) {
+        if (Availability.RESERVED == productItem.getAvailability()) {
+            throw new ReservationItemsException("The product item with serial number: " + productItem.getSerialNumber() + "is already reserved");
+        }
         productItem.setAvailability(Availability.RESERVED);
         productItem.setReservationTimeDate(LocalDateTime.now());
         return productItem;
