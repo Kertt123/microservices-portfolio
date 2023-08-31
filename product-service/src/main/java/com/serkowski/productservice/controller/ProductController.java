@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 
@@ -25,27 +26,27 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductDto placeProduct(@Valid @RequestBody ProductDto productRequest) {
+    public Mono<ProductDto> placeProduct(@Valid @RequestBody ProductDto productRequest) {
         ProductDto response = productService.placeProduct(productRequest);
         response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
-        return response;
+        return Mono.just(response);
     }
 
     @PutMapping
     @ResponseStatus(HttpStatus.OK)
-    public ProductDto updateProduct(@RequestBody ProductDto productRequest) {
+    public Mono<ProductDto> updateProduct(@RequestBody ProductDto productRequest) {
         ProductDto response = productService.updateProduct(productRequest);
         response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
-        return response;
+        return Mono.just(response);
     }
 
     //
     @GetMapping("/{productId}")
     @ResponseStatus(HttpStatus.OK)
-    public ProductDto getProduct(@PathVariable String productId) {
+    public Mono<ProductDto> getProduct(@PathVariable String productId) {
         ProductDto response = productService.getProductById(productId);
         response.add(linkTo(ProductController.class).slash(response.getId()).withSelfRel());
-        return response;
+        return Mono.just(response);
     }
 
 
