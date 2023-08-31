@@ -1,6 +1,5 @@
 package com.serkowski.productservice.service.impl;
 
-import com.mongodb.DuplicateKeyException;
 import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
@@ -15,6 +14,7 @@ import com.serkowski.productservice.repository.product.item.ProductItemWriteRepo
 import com.serkowski.productservice.service.api.ProductItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;

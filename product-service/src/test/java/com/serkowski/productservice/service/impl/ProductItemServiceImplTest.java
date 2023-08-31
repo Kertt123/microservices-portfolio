@@ -1,10 +1,12 @@
 package com.serkowski.productservice.service.impl;
 
+import com.mongodb.DuplicateKeyException;
 import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.ProductItem;
+import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
 import com.serkowski.productservice.repository.product.ProductReadRepository;
@@ -127,6 +129,24 @@ class ProductItemServiceImplTest {
     }
 
     @Test
+    void shouldThrowExceptionDuringAddItemProductBecauseProductWithSuchSerialNumberAlreadyExist() {
+        UUID uuid = UUID.randomUUID();
+        ProductItemDto productItemDto = ProductItemDto.builder()
+                .serialNumber("serialNumber123")
+                .build();
+
+        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
+                .id(uuid.toString())
+                .build()));
+        when(productItemWriteRepository.save(any())).thenThrow(DuplicateKeyException.class);
+
+        AddItemIndexException exception = assertThrows(AddItemIndexException.class, () ->
+                productItemService.addItem("123", productItemDto)
+        );
+        assertEquals("Product with serial number: serialNumber123 already exist", exception.getMessage());
+    }
+
+    @Test
     void shouldGetProductItem() {
         when(productItemReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(ProductItem.builder()
                 .id(UUID.randomUUID().toString())
@@ -197,6 +217,26 @@ class ProductItemServiceImplTest {
                         .build())
         );
         assertEquals("To reserve the products the ids or serial numbers need to be provided", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionDuringReserveBecauseOneOfTheProductItemsIsAlreadyReserved() {
+        ProductItem item1 = ProductItem.builder()
+                .serialNumber("serial1")
+                .availability(Availability.RESERVED)
+                .build();
+        ProductItem item2 = ProductItem.builder()
+                .serialNumber("serial2")
+                .availability(Availability.AVAILABLE)
+                .build();
+        when(productItemReadRepository.findBySerialNumbers(any())).thenReturn(List.of(item1, item2));
+
+        ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
+                productItemService.reserveItems(ReserveItemsDto.builder()
+                        .serialNumbers(List.of("serial1", "serial2"))
+                        .build())
+        );
+        assertEquals("The product item with serial number: serial1is already reserved", exception.getMessage());
     }
 
     @NotNull

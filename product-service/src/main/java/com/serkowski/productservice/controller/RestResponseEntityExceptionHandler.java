@@ -2,6 +2,7 @@ package com.serkowski.productservice.controller;
 
 import com.serkowski.productservice.dto.ErrorHandlerItem;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
+import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
 import org.springframework.http.HttpStatus;
@@ -39,7 +40,7 @@ public class RestResponseEntityExceptionHandler {
         return Mono.just(response);
     }
 
-    @ExceptionHandler(ReservationItemsException.class)
+    @ExceptionHandler(value = {ReservationItemsException.class, AddItemIndexException.class})
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
     public Mono<ErrorHandlerResponse> handleReservationException(ReservationItemsException ex) {
