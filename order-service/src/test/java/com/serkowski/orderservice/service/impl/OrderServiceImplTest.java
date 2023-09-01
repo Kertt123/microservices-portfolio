@@ -30,8 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceImplTest {
@@ -57,7 +56,7 @@ public class OrderServiceImplTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddressDto(address());
-        when(productService.reserveItems(any())).thenReturn(Mono.just("success"));
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
         when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
         when(orderMapper.map(any(OrderSummary.class))).thenReturn(OrderResponse.builder().build());
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
@@ -69,6 +68,22 @@ public class OrderServiceImplTest {
 
         verify(orderWriteRepository).save(any(OrderSummary.class));
         verify(orderMapper).map(any(OrderSummary.class));
+    }
+
+    @Test
+    void shouldMarkOrderAsNotValid() {
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setOrderItems(orderItems());
+        orderRequest.setAddressDto(address());
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
+        when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
+        when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
+
+        StepVerifier
+                .create(orderService.placeOrderDraft(orderRequest))
+                .verifyError();
+
+        verify(orderWriteRepository, times(2)).save(any(OrderSummary.class));
     }
 
     @Test

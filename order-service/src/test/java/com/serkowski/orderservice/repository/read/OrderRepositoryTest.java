@@ -78,7 +78,7 @@ class OrderRepositoryTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddressDto(address());
-        when(productService.reserveItems(any())).thenReturn(Mono.just("success"));
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
 
         StepVerifier
                 .create(orderService.placeOrderDraft(orderRequest))
@@ -86,6 +86,20 @@ class OrderRepositoryTest {
                 .verifyComplete();
 
         assertEquals(1, orderReadRepository.findAll().size());
+    }
+
+    @Test
+    void shouldPlaceOrderAsNotValid() {
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setOrderItems(orderItems());
+        orderRequest.setAddressDto(address());
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
+
+        StepVerifier
+                .create(orderService.placeOrderDraft(orderRequest))
+                .verifyError();
+
+        assertEquals(State.NOT_VALID, orderReadRepository.findAll().get(0).getState());
     }
 
     @Test

@@ -10,9 +10,10 @@ public interface ProductService {
     /**
      * Reserve items.
      *
+     * @param orderNumber order number
      * @param orderItems order items
      * @return response
      */
-    Mono<String> reserveItems(List<OrderItemRequestDto> orderItems);
+    Mono<String> reserveItems(String orderNumber, List<OrderItemRequestDto> orderItems);
 
 }

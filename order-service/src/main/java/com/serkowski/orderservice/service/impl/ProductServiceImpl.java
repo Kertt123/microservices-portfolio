@@ -26,7 +26,7 @@ public class ProductServiceImpl implements ProductService {
     private final WebClient.Builder webClientBuilder;
 
     @Override
-    public Mono<String> reserveItems(List<OrderItemRequestDto> orderItems) {
+    public Mono<String> reserveItems(String orderNumber, List<OrderItemRequestDto> orderItems) {
         return webClientBuilder.build().post()
                 .uri("http://product-service/api/product/items/reserve")
                 .contentType(MediaType.APPLICATION_JSON)

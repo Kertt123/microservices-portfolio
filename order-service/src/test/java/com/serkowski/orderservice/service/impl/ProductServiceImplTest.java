@@ -59,7 +59,7 @@ class ProductServiceImplTest {
         when(response.bodyToMono(eq(String.class))).thenReturn(Mono.just("success"));
 
         StepVerifier
-                .create(productService.reserveItems(List.of(OrderItemRequestDto.builder()
+                .create(productService.reserveItems("orderNumber1", List.of(OrderItemRequestDto.builder()
                         .itemRef("ref1")
                         .count(1)
                         .build())))
