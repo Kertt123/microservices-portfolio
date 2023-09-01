@@ -1,6 +1,8 @@
 package com.serkowski.orderservice.service.impl;
 
 import com.serkowski.orderservice.dto.ErrorHandlerResponse;
+import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
+import com.serkowski.orderservice.dto.request.ReserveItemDto;
 import com.serkowski.orderservice.dto.request.ReserveItemsDto;
 import com.serkowski.orderservice.model.error.ApiCallException;
 import com.serkowski.orderservice.service.api.ProductService;
@@ -24,18 +26,28 @@ public class ProductServiceImpl implements ProductService {
     private final WebClient.Builder webClientBuilder;
 
     @Override
-    public Mono<String> reserveItems(List<String> ids) {
+    public Mono<String> reserveItems(List<OrderItemRequestDto> orderItems) {
         return webClientBuilder.build().post()
                 .uri("http://product-service/api/product/items/reserve")
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> headers.setBasicAuth("user", "password"))
-                .body(BodyInserters.fromValue(ReserveItemsDto.builder()
-                        .ids(ids)
-                        .build()))
+                .body(BodyInserters.fromValue(buildBody(orderItems)))
                 .retrieve()
                 .onStatus(httpStatusCode -> BAD_REQUEST == httpStatusCode, response -> response.bodyToMono(ErrorHandlerResponse.class)
                         .flatMap(errorResponse -> Mono.error(new ApiCallException(errorResponse.getErrorMessage()))))
                 .bodyToMono(String.class);
+    }
+
+    private static ReserveItemsDto buildBody(List<OrderItemRequestDto> orderItems) {
+        return ReserveItemsDto.builder()
+                .items(orderItems.stream()
+                        .map(item -> ReserveItemDto.builder()
+                                .itemRef(item.getItemRef())
+                                .count(item.getCount())
+                                .build()
+                        )
+                        .toList())
+                .build();
     }
 }

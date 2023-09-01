@@ -32,7 +32,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Mono<OrderResponse> placeOrderDraft(OrderRequest orderRequest) {
-        return productService.reserveItems(orderRequest.getOrderItems().stream().map(OrderItemRequestDto::getItemRef).collect(Collectors.toList()))
+        return productService.reserveItems(orderRequest.getOrderItems())
                 .map(result -> {
                     log.info("Response of reserve items: " + result);
                     OrderSummary orderSummary = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));

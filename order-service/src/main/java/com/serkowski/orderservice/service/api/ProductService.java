@@ -1,18 +1,18 @@
 package com.serkowski.orderservice.service.api;
 
+import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 public interface ProductService {
 
     /**
      * Reserve items.
      *
-     * @param itemsIds items ids
+     * @param orderItems order items
      * @return response
      */
-    Mono<String> reserveItems(List<String> itemsIds);
+    Mono<String> reserveItems(List<OrderItemRequestDto> orderItems);
 
 }

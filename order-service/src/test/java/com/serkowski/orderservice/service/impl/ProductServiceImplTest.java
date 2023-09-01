@@ -1,8 +1,7 @@
 package com.serkowski.orderservice.service.impl;
 
-import com.serkowski.orderservice.model.error.ApiCallException;
+import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import com.serkowski.orderservice.service.api.ProductService;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,10 +14,9 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,7 +59,10 @@ class ProductServiceImplTest {
         when(response.bodyToMono(eq(String.class))).thenReturn(Mono.just("success"));
 
         StepVerifier
-                .create(productService.reserveItems(List.of("item1", "item2")))
+                .create(productService.reserveItems(List.of(OrderItemRequestDto.builder()
+                        .itemRef("ref1")
+                        .count(1)
+                        .build())))
                 .assertNext(response -> assertEquals("success", response))
                 .verifyComplete();
     }
