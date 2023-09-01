@@ -1,6 +1,7 @@
 package com.serkowski.productservice.service.impl;
 
 import com.serkowski.productservice.dto.ProductItemDto;
+import com.serkowski.productservice.dto.request.ReserveItem;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
@@ -178,11 +179,24 @@ class ProductItemServiceImplTest {
                 .id(UUID.randomUUID().toString())
                 .availability(Availability.AVAILABLE)
                 .build();
-        when(productItemReadRepository.findByIds(any())).thenReturn(List.of(item1, item2));
+        ProductItem item3 = ProductItem.builder()
+                .id(UUID.randomUUID().toString())
+                .availability(Availability.AVAILABLE)
+                .build();
+        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item1, item2)).build()));
+        when(productReadRepository.findById(eq("321"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item3)).build()));
         when(productItemWriteRepository.saveAll(itemsCaptor.capture())).thenReturn(Collections.emptyList());
 
         productItemService.reserveItems(ReserveItemsDto.builder()
-                .ids(List.of(UUID.randomUUID().toString(), UUID.randomUUID().toString()))
+                .items(List.of(ReserveItem.builder()
+                                .itemRef("123")
+                                .count(2)
+                                .build(),
+                        ReserveItem.builder()
+                                .itemRef("321")
+                                .count(1)
+                                .build()
+                ))
                 .build());
 
         itemsCaptor.getValue()
@@ -190,33 +204,19 @@ class ProductItemServiceImplTest {
     }
 
     @Test
-    void shouldReserveProductsBySerialNumbers() {
-        ProductItem item1 = ProductItem.builder()
-                .id(UUID.randomUUID().toString())
-                .availability(Availability.AVAILABLE)
+    void shouldThrowExceptionDuringReserveBecauseProductWasNotFound() {
+        ReserveItemsDto request = ReserveItemsDto.builder()
+                .items(List.of(ReserveItem.builder()
+                        .itemRef("123")
+                        .count(2)
+                        .build()))
                 .build();
-        ProductItem item2 = ProductItem.builder()
-                .id(UUID.randomUUID().toString())
-                .availability(Availability.AVAILABLE)
-                .build();
-        when(productItemReadRepository.findBySerialNumbers(any())).thenReturn(List.of(item1, item2));
-        when(productItemWriteRepository.saveAll(itemsCaptor.capture())).thenReturn(Collections.emptyList());
+        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.empty());
 
-        productItemService.reserveItems(ReserveItemsDto.builder()
-                .serialNumbers(List.of("serial1", "serial2"))
-                .build());
-
-        itemsCaptor.getValue()
-                .forEach(item -> assertEquals(Availability.RESERVED, item.getAvailability()));
-    }
-
-    @Test
-    void shouldThrowExceptionDuringReserveBecauseRequestIsEmpty() {
         ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
-                productItemService.reserveItems(ReserveItemsDto.builder()
-                        .build())
+                productItemService.reserveItems(request)
         );
-        assertEquals("To reserve the products the ids or serial numbers need to be provided", exception.getMessage());
+        assertEquals("Reservation list is empty because of product not found or empty items list", exception.getMessage());
     }
 
     @Test
@@ -229,14 +229,18 @@ class ProductItemServiceImplTest {
                 .serialNumber("serial2")
                 .availability(Availability.AVAILABLE)
                 .build();
-        when(productItemReadRepository.findBySerialNumbers(any())).thenReturn(List.of(item1, item2));
+        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item1, item2)).build()));
 
         ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
                 productItemService.reserveItems(ReserveItemsDto.builder()
-                        .serialNumbers(List.of("serial1", "serial2"))
+                        .items(List.of(ReserveItem.builder()
+                                .itemRef("123")
+                                .count(2)
+                                .build()
+                        ))
                         .build())
         );
-        assertEquals("The product item with serial number: serial1 is already reserved", exception.getMessage());
+        assertEquals("The amount of the available products is not enough to make a full reservation", exception.getMessage());
     }
 
     @NotNull

@@ -15,7 +15,4 @@ public interface ProductItemReadRepository extends MongoRepository<ProductItem, 
     @Query("select p from ProductItem p where p.id in :ids")
     List<ProductItem> findByIds(@Param("ids") List<String> ids);
 
-    @Query("select p from ProductItem p where p.serialNumber in :serialNumbers")
-    List<ProductItem> findBySerialNumbers(@Param("serialNumbers") List<String> serialNumbers);
-
 }

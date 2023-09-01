@@ -13,6 +13,5 @@ import java.util.List;
 @NoArgsConstructor
 public class ReserveItemsDto {
 
-    private List<String> ids;
-    private List<String> serialNumbers;
+    private List<ReserveItem> items;
 }

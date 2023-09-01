@@ -3,6 +3,7 @@ package com.serkowski.productservice.controller;
 import com.serkowski.productservice.config.SecurityConfig;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
 import com.serkowski.productservice.dto.ProductItemDto;
+import com.serkowski.productservice.dto.request.ReserveItem;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
@@ -84,10 +85,6 @@ class ProductItemControllerTest {
 
     @Test
     void shouldGetProduct() {
-        ProductItemDto productItemDto = ProductItemDto.builder()
-                .serialNumber("serialNumber1")
-                .build();
-
         when(productItemService.getItemById(eq("123"))).thenReturn(ProductItemDto.builder().id(UUID.randomUUID()).build());
 
         webTestClient.get().uri("/api/product/item/123")
@@ -113,7 +110,11 @@ class ProductItemControllerTest {
     @Test
     void shouldReserveProductsByIds() {
         ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
-                .ids(List.of("123", "321"))
+                .items(List.of(ReserveItem.builder()
+                        .itemRef("ref1")
+                        .count(2)
+                        .build()
+                ))
                 .build();
 
         webTestClient.post().uri("/api/product/items/reserve")
@@ -127,7 +128,7 @@ class ProductItemControllerTest {
     }
 
     @Test
-    void shouldNotReserveBecauseOfEmptyRequest() {
+    void shouldNotReserveBecauseOfException() {
         ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
                 .build();
         doThrow(ReservationItemsException.class).when(productItemService).reserveItems(eq(reserveItemsDto));

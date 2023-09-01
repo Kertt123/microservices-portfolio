@@ -1,8 +1,10 @@
 package com.serkowski.productservice.service.impl;
 
 import com.serkowski.productservice.dto.ProductItemDto;
+import com.serkowski.productservice.dto.request.ReserveItem;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
+import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.ProductItem;
 import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
@@ -70,31 +72,31 @@ public class ProductItemServiceImpl implements ProductItemService {
     @Override
     public void reserveItems(ReserveItemsDto reserveItemsDto) {
         List<ProductItem> reservedItems = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(reserveItemsDto.getIds())) {
-            reservedItems.addAll(productItemReadRepository.findByIds(reserveItemsDto.getIds())
-                    .stream()
-                    .map(this::markItemAsReserved)
-                    .toList());
-        }
-        if (!CollectionUtils.isEmpty(reserveItemsDto.getSerialNumbers())) {
-            reservedItems.addAll(productItemReadRepository.findBySerialNumbers(reserveItemsDto.getSerialNumbers())
-                    .stream()
-                    .map(this::markItemAsReserved)
-                    .toList());
-        }
+        reserveItemsDto.getItems()
+                .forEach(reserveItem -> productReadRepository.findById(reserveItem.getItemRef())
+                        .ifPresent(product -> reservedItems.addAll(getProductItems(reserveItem, product))));
         if (CollectionUtils.isEmpty(reservedItems)) {
-            throw new ReservationItemsException("To reserve the products the ids or serial numbers need to be provided");
+            throw new ReservationItemsException("Reservation list is empty because of product not found or empty items list");
         }
-        productItemWriteRepository.saveAll(reservedItems);
+
+        productItemWriteRepository.saveAll(reservedItems.stream().map(this::markItemAsReserved).toList());
     }
 
     private ProductItem markItemAsReserved(ProductItem productItem) {
-        if (Availability.RESERVED == productItem.getAvailability()) {
-            throw new ReservationItemsException("The product item with serial number: " + productItem.getSerialNumber() + " is already reserved");
-        }
         productItem.setAvailability(Availability.RESERVED);
         productItem.setReservationTimeDate(LocalDateTime.now());
         return productItem;
+    }
+
+    private List<ProductItem> getProductItems(ReserveItem reserveItem, Product product) {
+        List<ProductItem> list = product.getItems().stream()
+                .filter(productItem -> Availability.AVAILABLE == productItem.getAvailability())
+                .limit(reserveItem.getCount())
+                .toList();
+        if (list.size() < reserveItem.getCount()) {
+            throw new ReservationItemsException("The amount of the available products is not enough to make a full reservation");
+        }
+        return list;
     }
 
     private ProductItemDto mapToDto(ProductItem productItem) {

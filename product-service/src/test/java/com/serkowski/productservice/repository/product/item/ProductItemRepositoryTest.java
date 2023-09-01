@@ -1,6 +1,7 @@
 package com.serkowski.productservice.repository.product.item;
 
 import com.serkowski.productservice.dto.ProductItemDto;
+import com.serkowski.productservice.dto.request.ReserveItem;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
@@ -166,7 +167,11 @@ class ProductItemRepositoryTest {
         ProductItemDto item2 = productItemService.addItem(save.getId(), productItemDto2);
 
         productItemService.reserveItems(ReserveItemsDto.builder()
-                .ids(List.of(item1.getId().toString(), item2.getId().toString()))
+                .items(List.of(ReserveItem.builder()
+                        .itemRef(save.getId())
+                        .count(2)
+                        .build()
+                ))
                 .build());
 
         assertTrue(productItemReadRepository.findByIds(List.of(item1.getId().toString(), item2.getId().toString()))
@@ -192,11 +197,15 @@ class ProductItemRepositoryTest {
 
         ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
                 productItemService.reserveItems(ReserveItemsDto.builder()
-                        .ids(List.of(item1.getId().toString(), item2.getId().toString()))
+                        .items(List.of(ReserveItem.builder()
+                                .itemRef(save.getId())
+                                .count(2)
+                                .build()
+                        ))
                         .build())
         );
 
-        assertEquals("The product item with serial number: serialNumber123 is already reserved", exception.getMessage());
+        assertEquals("The amount of the available products is not enough to make a full reservation", exception.getMessage());
         productItemReadRepository.findById(item2.getId().toString()).ifPresent(productItem -> assertEquals(Availability.AVAILABLE, productItem.getAvailability()));
     }
 
