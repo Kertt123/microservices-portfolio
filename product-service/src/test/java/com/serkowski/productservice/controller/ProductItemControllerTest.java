@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -110,6 +111,7 @@ class ProductItemControllerTest {
     @Test
     void shouldReserveProductsByIds() {
         ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
+                .orderNumber("order1")
                 .items(List.of(ReserveItem.builder()
                         .itemRef("ref1")
                         .count(2)
@@ -128,8 +130,30 @@ class ProductItemControllerTest {
     }
 
     @Test
+    void shouldNotReserveBecauseOfIncorrectRequest() {
+        ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
+                .build();
+        doThrow(ReservationItemsException.class).when(productItemService).reserveItems(eq(reserveItemsDto));
+
+        webTestClient.post().uri("/api/product/items/reserve")
+                .body(BodyInserters.fromValue(reserveItemsDto))
+                .headers(headers -> headers.setBasicAuth("user", "password"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ErrorHandlerResponse.class)
+                .consumeWith(response -> assertEquals(2, response.getResponseBody().getErrors().size()));
+    }
+
+    @Test
     void shouldNotReserveBecauseOfException() {
         ReserveItemsDto reserveItemsDto = ReserveItemsDto.builder()
+                .orderNumber("order1")
+                .items(List.of(ReserveItem.builder()
+                        .itemRef("ref1")
+                        .count(2)
+                        .build()
+                ))
                 .build();
         doThrow(ReservationItemsException.class).when(productItemService).reserveItems(eq(reserveItemsDto));
 

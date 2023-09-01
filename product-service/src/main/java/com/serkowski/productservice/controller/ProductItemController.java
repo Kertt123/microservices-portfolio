@@ -38,7 +38,7 @@ public class ProductItemController {
 
     @PostMapping("/items/reserve")
     @ResponseStatus(HttpStatus.OK)
-    public Mono<String> reserveItems(@RequestBody ReserveItemsDto reserveItemsDto) {
+    public Mono<String> reserveItems(@Valid @RequestBody ReserveItemsDto reserveItemsDto) {
         productItemService.reserveItems(reserveItemsDto);
         return Mono.just("success");
     }

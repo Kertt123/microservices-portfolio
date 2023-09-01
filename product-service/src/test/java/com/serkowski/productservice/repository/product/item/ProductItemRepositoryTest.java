@@ -167,6 +167,7 @@ class ProductItemRepositoryTest {
         ProductItemDto item2 = productItemService.addItem(save.getId(), productItemDto2);
 
         productItemService.reserveItems(ReserveItemsDto.builder()
+                .orderNumber("orderNumber1")
                 .items(List.of(ReserveItem.builder()
                         .itemRef(save.getId())
                         .count(2)
@@ -176,7 +177,7 @@ class ProductItemRepositoryTest {
 
         assertTrue(productItemReadRepository.findByIds(List.of(item1.getId().toString(), item2.getId().toString()))
                 .stream()
-                .allMatch(productItem -> Availability.RESERVED == productItem.getAvailability()));
+                .allMatch(productItem -> Availability.RESERVED == productItem.getAvailability() && "orderNumber1".equals(productItem.getReservationOrderNumber())));
     }
 
     @Test

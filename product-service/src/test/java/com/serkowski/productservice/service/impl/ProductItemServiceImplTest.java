@@ -233,6 +233,7 @@ class ProductItemServiceImplTest {
 
         ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
                 productItemService.reserveItems(ReserveItemsDto.builder()
+                        .orderNumber("orderNumber1")
                         .items(List.of(ReserveItem.builder()
                                 .itemRef("123")
                                 .count(2)

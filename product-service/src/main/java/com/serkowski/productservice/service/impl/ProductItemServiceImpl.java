@@ -79,12 +79,13 @@ public class ProductItemServiceImpl implements ProductItemService {
             throw new ReservationItemsException("Reservation list is empty because of product not found or empty items list");
         }
 
-        productItemWriteRepository.saveAll(reservedItems.stream().map(this::markItemAsReserved).toList());
+        productItemWriteRepository.saveAll(reservedItems.stream().map(item -> markItemAsReserved(item, reserveItemsDto.getOrderNumber())).toList());
     }
 
-    private ProductItem markItemAsReserved(ProductItem productItem) {
+    private ProductItem markItemAsReserved(ProductItem productItem, String orderNumber) {
         productItem.setAvailability(Availability.RESERVED);
         productItem.setReservationTimeDate(LocalDateTime.now());
+        productItem.setReservationOrderNumber(orderNumber);
         return productItem;
     }
 
