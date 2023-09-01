@@ -11,7 +11,7 @@ public interface ProductService {
      * Reserve items.
      *
      * @param itemsIds items ids
-     * @return
+     * @return response
      */
     Mono<String> reserveItems(List<String> itemsIds);
 

@@ -35,7 +35,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @Testcontainers
 class ProductItemRepositoryTest {
 
-
     @Autowired
     ProductReadRepository productReadRepository;
 

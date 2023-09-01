@@ -4,6 +4,7 @@ import com.serkowski.orderservice.dto.ErrorHandlerItem;
 import com.serkowski.orderservice.dto.ErrorHandlerResponse;
 import com.serkowski.orderservice.dto.request.OrderRequest;
 import com.serkowski.orderservice.dto.response.OrderResponse;
+import com.serkowski.orderservice.model.error.ApiCallException;
 import com.serkowski.orderservice.model.error.OrderNotFound;
 import com.serkowski.orderservice.service.api.OrderService;
 import jakarta.validation.Valid;
@@ -13,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.support.WebExchangeBindException;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -57,9 +59,10 @@ public class OrderController {
         orderService.deleteOrderByOrderNumber(orderNumber);
     }
 
+    @ExceptionHandler(WebExchangeBindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Mono<ErrorHandlerResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    @ResponseBody
+    public Mono<ErrorHandlerResponse> handleException(WebExchangeBindException ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
         ex.getBindingResult().getAllErrors().forEach((error) ->
                 response.getErrors().add(ErrorHandlerItem.builder()
@@ -73,6 +76,14 @@ public class OrderController {
     @ExceptionHandler(OrderNotFound.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Mono<ErrorHandlerResponse> handleOrderNotFound(OrderNotFound ex) {
+        ErrorHandlerResponse response = new ErrorHandlerResponse();
+        response.setErrorMessage(ex.getMessage());
+        return Mono.just(response);
+    }
+
+    @ExceptionHandler(ApiCallException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<ErrorHandlerResponse> handleApiCallException(ApiCallException ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
         response.setErrorMessage(ex.getMessage());
         return Mono.just(response);

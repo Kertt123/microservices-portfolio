@@ -13,12 +13,15 @@ import com.serkowski.orderservice.repository.read.OrderReadRepository;
 import com.serkowski.orderservice.repository.write.OrderWriteRepository;
 import com.serkowski.orderservice.service.api.OrderMapper;
 import com.serkowski.orderservice.service.api.OrderService;
+import com.serkowski.orderservice.service.api.ProductService;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,11 +45,11 @@ public class OrderServiceImplTest {
     private OrderMapper orderMapper;
 
     @Mock
-    private WebClient.Builder builder;
+    private ProductService productService;
 
     @BeforeEach
     void init() {
-        orderService = new OrderServiceImpl(orderWriteRepository, orderReadRepository, orderMapper, builder);
+        orderService = new OrderServiceImpl(orderWriteRepository, orderReadRepository, orderMapper, productService);
     }
 
     @Test
@@ -54,10 +57,15 @@ public class OrderServiceImplTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddressDto(address());
+        when(productService.reserveItems(any())).thenReturn(Mono.just("success"));
         when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
+        when(orderMapper.map(any(OrderSummary.class))).thenReturn(OrderResponse.builder().build());
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
 
-        orderService.placeOrderDraft(orderRequest);
+        StepVerifier
+                .create(orderService.placeOrderDraft(orderRequest))
+                .assertNext(Assertions::assertNotNull)
+                .verifyComplete();
 
         verify(orderWriteRepository).save(any(OrderSummary.class));
         verify(orderMapper).map(any(OrderSummary.class));
@@ -139,6 +147,9 @@ public class OrderServiceImplTest {
     private OrderSummary prepareOrder() {
         return OrderSummary.builder()
                 .id(1L)
+                .orderLineItemsList(List.of(OrderItem.builder()
+                        .itemRef("ref1")
+                        .build()))
                 .build();
     }
 
@@ -146,6 +157,7 @@ public class OrderServiceImplTest {
         OrderItemRequestDto orderItemRequestDto = new OrderItemRequestDto();
         orderItemRequestDto.setCount(1);
         orderItemRequestDto.setItemName("name");
+        orderItemRequestDto.setItemRef("ref1");
         return List.of(orderItemRequestDto);
     }
 

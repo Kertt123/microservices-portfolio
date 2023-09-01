@@ -2,9 +2,7 @@ package com.serkowski.orderservice.service.impl;
 
 import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import com.serkowski.orderservice.dto.request.OrderRequest;
-import com.serkowski.orderservice.dto.request.ReserveItemsDto;
 import com.serkowski.orderservice.dto.response.OrderResponse;
-import com.serkowski.orderservice.model.OrderItem;
 import com.serkowski.orderservice.model.OrderSummary;
 import com.serkowski.orderservice.model.State;
 import com.serkowski.orderservice.model.error.OrderNotFound;
@@ -15,12 +13,8 @@ import com.serkowski.orderservice.service.api.OrderService;
 import com.serkowski.orderservice.service.api.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.BodyInserters;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.stream.Collectors;
@@ -38,12 +32,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public Mono<OrderResponse> placeOrderDraft(OrderRequest orderRequest) {
-        OrderSummary orderSummary = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
-
-        return productService.reserveItems(orderSummary.getOrderLineItemsList().stream().map(OrderItem::getItemRef).collect(Collectors.toList()))
+        return productService.reserveItems(orderRequest.getOrderItems().stream().map(OrderItemRequestDto::getItemRef).collect(Collectors.toList()))
                 .map(result -> {
-                        log.info("Response of reserve items: " + result);
-                        return orderMapper.map(orderSummary);
+                    log.info("Response of reserve items: " + result);
+                    OrderSummary orderSummary = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
+                    return orderMapper.map(orderSummary);
                 });
     }
 
