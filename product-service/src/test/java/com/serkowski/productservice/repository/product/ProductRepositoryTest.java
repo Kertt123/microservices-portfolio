@@ -3,6 +3,7 @@ package com.serkowski.productservice.repository.product;
 import com.serkowski.productservice.dto.ProductDto;
 import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.error.ProductNotFound;
+import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
 import com.serkowski.productservice.service.api.ProductService;
 import com.serkowski.productservice.service.impl.ProductServiceImpl;
 import org.junit.jupiter.api.AfterAll;
@@ -35,6 +36,9 @@ class ProductRepositoryTest {
     @Autowired
     ProductWriteRepository productWriteRepository;
 
+    @Autowired
+    ProductItemWriteRepository productItemWriteRepository;
+
 
     ProductService productService;
 
@@ -59,7 +63,7 @@ class ProductRepositoryTest {
 
     @BeforeEach
     void clean() {
-        productService = new ProductServiceImpl(productReadRepository, productWriteRepository);
+        productService = new ProductServiceImpl(productReadRepository, productWriteRepository, productItemWriteRepository);
         productWriteRepository.deleteAll();
     }
 

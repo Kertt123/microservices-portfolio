@@ -5,6 +5,7 @@ import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.repository.product.ProductReadRepository;
 import com.serkowski.productservice.repository.product.ProductWriteRepository;
+import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
 import com.serkowski.productservice.service.api.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductReadRepository productReadRepository;
     private final ProductWriteRepository productWriteRepository;
+    private final ProductItemWriteRepository productItemWriteRepository;
 
 
     @Override
@@ -64,7 +66,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public void deleteProductById(String productId) {
         productReadRepository.findById(productId)
-                .ifPresentOrElse(productWriteRepository::delete, () -> {
+                .ifPresentOrElse(product -> {
+                    productItemWriteRepository.deleteAll(product.getItems());
+                    productWriteRepository.delete(product);
+                }, () -> {
                     throw new ProductNotFound("Product which id: " + productId + " not exist, so can't be deleted");
                 });
     }

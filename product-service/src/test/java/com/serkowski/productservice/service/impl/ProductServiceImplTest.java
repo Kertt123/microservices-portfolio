@@ -5,6 +5,7 @@ import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.repository.product.ProductReadRepository;
 import com.serkowski.productservice.repository.product.ProductWriteRepository;
+import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
 import com.serkowski.productservice.service.api.ProductService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,9 +35,12 @@ public class ProductServiceImplTest {
     @Mock
     private ProductWriteRepository productWriteRepository;
 
+    @Mock
+    private ProductItemWriteRepository productItemWriteRepository;
+
     @BeforeEach
     void init() {
-        productService = new ProductServiceImpl(productReadRepository, productWriteRepository);
+        productService = new ProductServiceImpl(productReadRepository, productWriteRepository, productItemWriteRepository);
     }
 
     @Test
