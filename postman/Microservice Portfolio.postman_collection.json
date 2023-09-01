@@ -11,12 +11,58 @@
 			"item": [
 				{
 					"name": "New order draft",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (responseCode.code === 201) {",
+									"",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    pm.environment.set(\"order_id\",jsonData.orderNumber);",
+									"    pm.test(\"Status test 201 OK. Product has been created.\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"} ",
+									"else {",
+									"    tests[\"Status code is \" + responseCode.code.toString()] = false;",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\",\n            \"itemRef\": \"ref1\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\",\n            \"itemRef\": \"{{product_id}}\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -41,6 +87,31 @@
 				{
 					"name": "Update order draft",
 					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
 						"method": "PUT",
 						"header": [],
 						"body": {
@@ -53,7 +124,7 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8081/api/order/draft?orderNumber=c33302c6-f674-4187-bb92-92b3833bc0e7",
+							"raw": "localhost:8081/api/order/draft/{{order_id}}",
 							"host": [
 								"localhost"
 							],
@@ -61,13 +132,8 @@
 							"path": [
 								"api",
 								"order",
-								"draft"
-							],
-							"query": [
-								{
-									"key": "orderNumber",
-									"value": "c33302c6-f674-4187-bb92-92b3833bc0e7"
-								}
+								"draft",
+								"{{order_id}}"
 							]
 						}
 					},
@@ -79,11 +145,36 @@
 						"disableBodyPruning": true
 					},
 					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"raw": "",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -91,20 +182,15 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8081/api/order?orderNumber=c33302c6-f674-4187-bb92-92b3833bc0e7",
+							"raw": "localhost:8081/api/order/{{order_id}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8081",
 							"path": [
 								"api",
-								"order"
-							],
-							"query": [
-								{
-									"key": "orderNumber",
-									"value": "c33302c6-f674-4187-bb92-92b3833bc0e7"
-								}
+								"order",
+								"{{order_id}}"
 							]
 						}
 					},
@@ -113,6 +199,31 @@
 				{
 					"name": "Remove order",
 					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
 						"method": "DELETE",
 						"header": [],
 						"body": {
@@ -125,20 +236,468 @@
 							}
 						},
 						"url": {
-							"raw": "localhost:8081/api/order?orderNumber=c33302c6-f674-4187-bb92-92b3833bc0e7",
+							"raw": "localhost:8081/api/order/{{order_id}}",
 							"host": [
 								"localhost"
 							],
 							"port": "8081",
 							"path": [
 								"api",
-								"order"
-							],
-							"query": [
+								"order",
+								"{{order_id}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Product service",
+			"item": [
+				{
+					"name": "New product",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (responseCode.code === 201) {",
+									"",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    pm.environment.set(\"product_id\",jsonData.id);",
+									"    pm.test(\"Status test 201 OK. Product has been created.\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"} ",
+									"else {",
+									"    tests[\"Status code is \" + responseCode.code.toString()] = false;",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
 								{
-									"key": "orderNumber",
-									"value": "c33302c6-f674-4187-bb92-92b3833bc0e7"
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
 								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"testName42\",\n    \"description\": \"testDesc\",\n    \"price\": 28.123,\n    \"categories\": [\"category1\"],\n    \"tags\": [\"tag1\"],\n    \"specification\": {\n        \"size\": \"12x12x12\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Reserve items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (responseCode.code === 201) {",
+									"",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    pm.environment.set(\"product_id\",jsonData.id);",
+									"    pm.test(\"Status test 201 OK. Product has been created.\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"} ",
+									"else {",
+									"    tests[\"Status code is \" + responseCode.code.toString()] = false;",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"items\": [\n        {\n            \"itemRef\": \"{{product_id}}\",\n            \"count\": 1\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product/items/reserve",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product",
+								"items",
+								"reserve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Add item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (responseCode.code === 200) {",
+									"",
+									"    var jsonData = JSON.parse(responseBody);",
+									"    pm.environment.set(\"product_item_id\",jsonData.id);",
+									"    pm.test(\"Status test 201 OK. Product has been created.\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"} ",
+									"else {",
+									"    tests[\"Status code is \" + responseCode.code.toString()] = false;",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serialNumber\": \"123qweqwdeasdqsadw\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product/{{product_id}}/add-item",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product",
+								"{{product_id}}",
+								"add-item"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update order draft",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{product_id}}\",\n    // \"id\": \"\",\n    \"name\": \"testName424\",\n    \"description\": \"testDesc\",\n    \"categories\": [\n        \"category1\"\n    ],\n    \"tags\": [\n        \"tag1\"\n    ],\n    \"price\": 28.123,\n    \"specification\": {\n        \"size\": \"12x12x12\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get product by id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product/{{product_id}}",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product",
+								"{{product_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get product item by id",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product/item/{{product_item_id}}",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product",
+								"item",
+								"{{product_item_id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Remove order",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "password",
+									"value": "password",
+									"type": "string"
+								},
+								{
+									"key": "username",
+									"value": "user",
+									"type": "string"
+								},
+								{
+									"key": "saveHelperData",
+									"value": true,
+									"type": "boolean"
+								},
+								{
+									"key": "showPassword",
+									"value": false,
+									"type": "boolean"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"orderItems\": [\n        {\n            \"count\": 1,\n            \"itemName\": \"testName\"\n        }\n    ],\n    \"addressDto\": {\n        \"addressLine1\": \"asdasd\",\n        \"addressLine2\": \"aasdasdqwesdasd\",\n        \"city\": \"city\",\n        \"country\": \"country\"\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "localhost:8082/api/product/{{product_id}}",
+							"host": [
+								"localhost"
+							],
+							"port": "8082",
+							"path": [
+								"api",
+								"product",
+								"{{product_id}}"
 							]
 						}
 					},
