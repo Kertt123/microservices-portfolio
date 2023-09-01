@@ -4,6 +4,7 @@ import com.serkowski.productservice.config.SecurityConfig;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
 import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
+import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
 import com.serkowski.productservice.service.api.ProductItemService;
@@ -66,6 +67,22 @@ class ProductItemControllerTest {
     }
 
     @Test
+    void shouldNotAddProductItemBecauseItemWithSuchSerialNumberAlreadyExist() {
+        ProductItemDto productItemDto = ProductItemDto.builder()
+                .serialNumber("serialNumber1")
+                .build();
+        when(productItemService.addItem(eq("123"), eq(productItemDto))).thenThrow(AddItemIndexException.class);
+
+        webTestClient.post().uri("/api/product/123/add-item")
+                .body(BodyInserters.fromValue(productItemDto))
+                .headers(headers -> headers.setBasicAuth("user", "password"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ErrorHandlerResponse.class);
+    }
+
+    @Test
     void shouldGetProduct() {
         ProductItemDto productItemDto = ProductItemDto.builder()
                 .serialNumber("serialNumber1")
@@ -81,7 +98,6 @@ class ProductItemControllerTest {
                 .expectBody(ProductItemDto.class);
     }
 
-    //
     @Test
     void shouldNotGetProductItemBecauseOfWrongId() {
         when(productItemService.getItemById(eq("123"))).thenThrow(ProductNotFound.class);

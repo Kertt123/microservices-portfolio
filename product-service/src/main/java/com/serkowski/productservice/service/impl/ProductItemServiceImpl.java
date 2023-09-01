@@ -90,7 +90,7 @@ public class ProductItemServiceImpl implements ProductItemService {
 
     private ProductItem markItemAsReserved(ProductItem productItem) {
         if (Availability.RESERVED == productItem.getAvailability()) {
-            throw new ReservationItemsException("The product item with serial number: " + productItem.getSerialNumber() + "is already reserved");
+            throw new ReservationItemsException("The product item with serial number: " + productItem.getSerialNumber() + " is already reserved");
         }
         productItem.setAvailability(Availability.RESERVED);
         productItem.setReservationTimeDate(LocalDateTime.now());

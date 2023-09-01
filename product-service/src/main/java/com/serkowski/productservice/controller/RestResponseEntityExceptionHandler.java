@@ -2,9 +2,8 @@ package com.serkowski.productservice.controller;
 
 import com.serkowski.productservice.dto.ErrorHandlerItem;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
-import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
-import com.serkowski.productservice.model.error.ReservationItemsException;
+import com.serkowski.productservice.model.error.ValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -40,10 +39,10 @@ public class RestResponseEntityExceptionHandler {
         return Mono.just(response);
     }
 
-    @ExceptionHandler(value = {ReservationItemsException.class, AddItemIndexException.class})
+    @ExceptionHandler(value = ValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public Mono<ErrorHandlerResponse> handleReservationException(ReservationItemsException ex) {
+    public Mono<ErrorHandlerResponse> handleValidationException(ValidationException ex) {
         ErrorHandlerResponse response = new ErrorHandlerResponse();
         response.setErrorMessage(ex.getMessage());
         return Mono.just(response);

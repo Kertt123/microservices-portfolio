@@ -1,6 +1,5 @@
 package com.serkowski.productservice.service.impl;
 
-import com.mongodb.DuplicateKeyException;
 import com.serkowski.productservice.dto.ProductItemDto;
 import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.model.Availability;
@@ -22,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DuplicateKeyException;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -236,7 +236,7 @@ class ProductItemServiceImplTest {
                         .serialNumbers(List.of("serial1", "serial2"))
                         .build())
         );
-        assertEquals("The product item with serial number: serial1is already reserved", exception.getMessage());
+        assertEquals("The product item with serial number: serial1 is already reserved", exception.getMessage());
     }
 
     @NotNull

@@ -57,7 +57,7 @@ class ProductControllerTest {
 
 
     @Test
-    void shouldFailDuringProductCrateBecauseOfMissingInnerFields() throws Exception {
+    void shouldFailDuringProductCrateBecauseOfMissingInnerFields() {
         ProductDto productRequest = ProductDto.builder()
                 .build();
 
@@ -70,12 +70,12 @@ class ProductControllerTest {
                 .expectBody(ErrorHandlerResponse.class)
                 .consumeWith(result -> {
                     ErrorHandlerResponse responseBody = result.getResponseBody();
-                    assertEquals(6, responseBody.getErrors().size());
+                    assertEquals(6, responseBody != null ? responseBody.getErrors().size() : 0);
                 });
     }
 
     @Test
-    void shouldUpdateProduct() throws Exception {
+    void shouldUpdateProduct() {
         ProductDto response = createProductAndReturnResponse(ProductDto.builder());
         response.setName("nameAfter");
 
@@ -91,7 +91,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void shouldNotUpdateProductBecauseOfWrongId() throws Exception {
+    void shouldNotUpdateProductBecauseOfWrongId() {
         ProductDto productRequest = ProductDto.builder()
                 .id(UUID.randomUUID())
                 .name("name")
@@ -115,7 +115,7 @@ class ProductControllerTest {
 
 
     @Test
-    void shouldGetProduct() throws Exception {
+    void shouldGetProduct() {
         ProductDto response = createProductAndReturnResponse(ProductDto.builder()
                 .id(UUID.randomUUID()));
 
