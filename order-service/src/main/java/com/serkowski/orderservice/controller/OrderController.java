@@ -7,6 +7,7 @@ import com.serkowski.orderservice.dto.response.OrderResponse;
 import com.serkowski.orderservice.model.error.ApiCallException;
 import com.serkowski.orderservice.model.error.OrderNotFound;
 import com.serkowski.orderservice.service.api.OrderService;
+import io.micrometer.tracing.annotation.NewSpan;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,9 @@ public class OrderController {
 
     @PostMapping("/draft")
     @ResponseStatus(HttpStatus.CREATED)
+    @NewSpan("createOrderDraft")
     public Mono<OrderResponse> placeOrderDraft(@Valid @RequestBody OrderRequest orderRequest) {
+        log.info("test log with tracing info");
         return orderService.placeOrderDraft(orderRequest)
                 .map(orderResponse -> {
                     orderResponse.add(linkTo(OrderController.class).slash(orderResponse.getOrderNumber()).withSelfRel());

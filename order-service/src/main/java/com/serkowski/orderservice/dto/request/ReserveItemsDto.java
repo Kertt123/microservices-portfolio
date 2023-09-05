@@ -13,5 +13,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ReserveItemsDto {
 
+    private String orderNumber;
     private List<ReserveItemDto> items;
 }

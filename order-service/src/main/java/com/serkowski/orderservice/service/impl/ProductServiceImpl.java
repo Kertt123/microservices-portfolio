@@ -32,15 +32,16 @@ public class ProductServiceImpl implements ProductService {
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> headers.setBasicAuth("user", "password"))
-                .body(BodyInserters.fromValue(buildBody(orderItems)))
+                .body(BodyInserters.fromValue(buildBody(orderNumber, orderItems)))
                 .retrieve()
                 .onStatus(httpStatusCode -> BAD_REQUEST == httpStatusCode, response -> response.bodyToMono(ErrorHandlerResponse.class)
                         .flatMap(errorResponse -> Mono.error(new ApiCallException(errorResponse.getErrorMessage()))))
                 .bodyToMono(String.class);
     }
 
-    private static ReserveItemsDto buildBody(List<OrderItemRequestDto> orderItems) {
+    private static ReserveItemsDto buildBody(String orderNumber, List<OrderItemRequestDto> orderItems) {
         return ReserveItemsDto.builder()
+                .orderNumber(orderNumber)
                 .items(orderItems.stream()
                         .map(item -> ReserveItemDto.builder()
                                 .itemRef(item.getItemRef())

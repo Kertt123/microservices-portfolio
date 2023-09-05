@@ -53,6 +53,13 @@ services:
       - "9000:9000"
     environment:
       AUTO_CONNECT_CONNECTION_STRING: zookeeper-ms:2181
+      
+    ## Zipkin
+  zipkin:
+    image: openzipkin/zipkin
+    container_name: zipkin
+    ports:
+      - "9411:9411"
 
   ## Order.java-Service Docker Compose Config
   order-service:
