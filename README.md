@@ -1,5 +1,6 @@
 # microservices-portfolio
 Microservice portfolio:
+ELK, Zipkin, OpenTelemetry
 
 1. Order Service Stack:
    - Java
@@ -10,16 +11,18 @@ Microservice portfolio:
    - Junit 5
    - Test containers
    - Maven
+   - Spring Security
 
 2. Product Service Stack:
    - Java
    - MongoDB
    - Spring Boot
    - Spring Data JPA
-   - Spring WebFulx
+   - Spring Webflux
    - Junit 5
    - Test containers
    - Groovy
+   - Spring Security
 
 3. Discovery service
    - Eureka Server
