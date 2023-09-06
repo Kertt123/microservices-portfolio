@@ -26,7 +26,7 @@ public class OrderMapperImpl implements OrderMapper {
                 .orderNumber(String.valueOf(UUID.randomUUID()))
                 .orderLineItemsList(mapItems(orderRequest.getOrderItems()))
                 .state(state)
-                .address(mapAddress(orderRequest.getAddressDto()))
+                .address(mapAddress(orderRequest.getAddress()))
                 .build();
     }
 
@@ -37,6 +37,7 @@ public class OrderMapperImpl implements OrderMapper {
                 .state(orderSummary.getState().name())
                 .orderItems(mapResponseItems(orderSummary.getOrderLineItemsList()))
                 .address(mapAddressResponse(orderSummary.getAddress()))
+                .version(orderSummary.getVersion())
                 .build();
     }
 
@@ -50,6 +51,7 @@ public class OrderMapperImpl implements OrderMapper {
             return orderItem;
         }).collect(Collectors.toList());
     }
+
     @Override
     public Address mapAddress(AddressRequestDto addressDto) {
         Address address = new Address();

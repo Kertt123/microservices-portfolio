@@ -25,7 +25,7 @@ class OrderMapperTest {
     void shouldMapOrderRequestToOrderSummary() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
 
         OrderSummary result = orderMapper.map(orderRequest, State.DRAFT);
 

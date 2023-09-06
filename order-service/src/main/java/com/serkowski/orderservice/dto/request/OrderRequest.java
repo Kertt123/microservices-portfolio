@@ -19,5 +19,5 @@ public class OrderRequest {
     private List<OrderItemRequestDto> orderItems;
     @Valid
     @NotNull(message = "Address information can't be empty")
-    private AddressRequestDto addressDto;
+    private AddressRequestDto address;
 }

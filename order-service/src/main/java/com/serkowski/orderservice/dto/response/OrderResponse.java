@@ -15,4 +15,5 @@ public class OrderResponse extends RepresentationModel<OrderResponse> {
     private String state;
     private List<OrderItemResponseDto> orderItems;
     private AddressResponseDto address;
+    private Integer version;
 }

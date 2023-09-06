@@ -50,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
         return orderReadRepository.findByOrderNumber(orderNumber)
                 .map(orderSummary -> {
                     orderSummary.setOrderLineItemsList(orderMapper.mapItems(orderRequest.getOrderItems()));
-                    orderSummary.setAddress(orderMapper.mapAddress(orderRequest.getAddressDto()));
+                    orderSummary.setAddress(orderMapper.mapAddress(orderRequest.getAddress()));
                     return orderMapper.map(orderWriteRepository.save(orderSummary));
                 })
                 .orElseThrow(() -> new OrderNotFound("Can't update order which is not exist for number: " + orderNumber));

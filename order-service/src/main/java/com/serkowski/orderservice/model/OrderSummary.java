@@ -24,4 +24,6 @@ public class OrderSummary {
     private Address address;
     @Enumerated(EnumType.ORDINAL)
     private State state;
+    @Version
+    private Integer version;
 }

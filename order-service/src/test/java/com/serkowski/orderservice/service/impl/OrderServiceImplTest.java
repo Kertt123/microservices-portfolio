@@ -55,7 +55,7 @@ public class OrderServiceImplTest {
     void shouldPlaceOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
         when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
         when(orderMapper.map(any(OrderSummary.class))).thenReturn(OrderResponse.builder().build());
@@ -74,7 +74,7 @@ public class OrderServiceImplTest {
     void shouldMarkOrderAsNotValid() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
         when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
@@ -91,9 +91,9 @@ public class OrderServiceImplTest {
         OrderResponse response = OrderResponse.builder().build();
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.ofNullable(OrderSummary.builder().build()));
-        when(orderMapper.mapAddress(eq(orderRequest.getAddressDto()))).thenReturn(Address.builder().build());
+        when(orderMapper.mapAddress(eq(orderRequest.getAddress()))).thenReturn(Address.builder().build());
         when(orderMapper.mapItems(eq(orderRequest.getOrderItems()))).thenReturn(List.of(OrderItem.builder().build()));
         when(orderMapper.map(any(OrderSummary.class))).thenReturn(response);
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
@@ -109,7 +109,7 @@ public class OrderServiceImplTest {
     void shouldThrowExceptionDuringUpdateOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
 
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
