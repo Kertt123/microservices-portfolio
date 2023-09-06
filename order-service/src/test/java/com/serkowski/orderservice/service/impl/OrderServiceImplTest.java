@@ -92,13 +92,13 @@ public class OrderServiceImplTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
-        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.ofNullable(OrderSummary.builder().build()));
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("testNumber123"), eq(1))).thenReturn(Optional.ofNullable(OrderSummary.builder().build()));
         when(orderMapper.mapAddress(eq(orderRequest.getAddress()))).thenReturn(Address.builder().build());
         when(orderMapper.mapItems(eq(orderRequest.getOrderItems()))).thenReturn(List.of(OrderItem.builder().build()));
         when(orderMapper.map(any(OrderSummary.class))).thenReturn(response);
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
 
-        OrderResponse result = orderService.updateOrder(orderRequest, "testNumber123");
+        OrderResponse result = orderService.updateOrder(orderRequest, "testNumber123", 1);
 
         assertEquals(response, result);
         verify(orderWriteRepository).save(any(OrderSummary.class));
@@ -110,20 +110,20 @@ public class OrderServiceImplTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
-        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("testNumber123"), eq(1))).thenReturn(Optional.empty());
 
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
-                orderService.updateOrder(orderRequest, "testNumber123")
+                orderService.updateOrder(orderRequest, "testNumber123", 1)
         );
         assertEquals("Can't update order which is not exist for number: testNumber123", exception.getMessage());
     }
 
     @Test
     void shouldThrowExceptionDuringGetOrder() {
-        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("testNumber123"), eq(1))).thenReturn(Optional.empty());
 
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
-                orderService.getOrderByOrderNumber("testNumber123")
+                orderService.getOrderByOrderNumber("testNumber123", 1)
         );
         assertEquals("Order which number: testNumber123 not exist", exception.getMessage());
     }
@@ -131,10 +131,10 @@ public class OrderServiceImplTest {
     @Test
     void shouldGetOrderByOrderNumber() {
         OrderResponse response = OrderResponse.builder().build();
-        when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.ofNullable(OrderSummary.builder().build()));
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("testNumber123"), eq(1))).thenReturn(Optional.ofNullable(OrderSummary.builder().build()));
         when(orderMapper.map(any(OrderSummary.class))).thenReturn(response);
 
-        OrderResponse result = orderService.getOrderByOrderNumber("testNumber123");
+        OrderResponse result = orderService.getOrderByOrderNumber("testNumber123", 1);
 
         assertEquals(response, result);
     }

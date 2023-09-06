@@ -17,6 +17,8 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -39,26 +41,12 @@ class OrderRepositoryTest {
 
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("order-service");
-
-    @BeforeAll
-    static void beforeAll() {
-
-        postgres.start();
-    }
-
-    @AfterAll
-    static void afterAll() {
-        postgres.stop();
-    }
-
-    @BeforeEach
-    void clean() {
-        orderWriteRepository.deleteAll();
-    }
-
+            .withDatabaseName("order-service")
+            .withUsername("serkowski")
+            .withPassword("password");
 
     private OrderService orderService;
+
     @Autowired
     private OrderWriteRepository orderWriteRepository;
     @Autowired
@@ -68,16 +56,32 @@ class OrderRepositoryTest {
     @Mock
     private ProductService productService;
 
+    @DynamicPropertySource
+    static void mongoDbProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    }
+    @BeforeAll
+    static void beforeAll() {
+        postgres.start();
+    }
+
+    @AfterAll
+    static void afterAll() {
+        postgres.stop();
+    }
+
     @BeforeEach
     void init() {
         orderService = new OrderServiceImpl(orderWriteRepository, orderReadRepository, orderMapper, productService);
+        orderWriteRepository.deleteAll();
     }
+
 
     @Test
     void shouldPlaceOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
 
         StepVerifier
@@ -92,7 +96,7 @@ class OrderRepositoryTest {
     void shouldPlaceOrderAsNotValid() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
 
         StepVerifier
@@ -106,11 +110,11 @@ class OrderRepositoryTest {
     void shouldUpdateOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         OrderSummary save = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
-        orderRequest.getAddressDto().setCity("city2");
+        orderRequest.getAddress().setCity("city2");
 
-        orderService.updateOrder(orderRequest, save.getOrderNumber());
+        orderService.updateOrder(orderRequest, save.getOrderNumber(), 0);
 
         orderReadRepository.findByOrderNumber(save.getOrderNumber()).ifPresent(orderSummary -> assertEquals("city2", orderSummary.getAddress().getCity()));
     }
@@ -119,10 +123,10 @@ class OrderRepositoryTest {
     void shouldThrowExceptionDuringUpdateOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
 
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
-                orderService.updateOrder(orderRequest, "testNumber123")
+                orderService.updateOrder(orderRequest, "testNumber123", 0)
         );
         assertEquals("Can't update order which is not exist for number: testNumber123", exception.getMessage());
     }
@@ -131,7 +135,7 @@ class OrderRepositoryTest {
     void shouldDeleteOrderByOrderNumber() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddressDto(address());
+        orderRequest.setAddress(address());
         OrderSummary save = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
 
         orderService.deleteOrderByOrderNumber(save.getOrderNumber());

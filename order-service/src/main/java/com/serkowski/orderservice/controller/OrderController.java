@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import reactor.core.publisher.Mono;
@@ -35,24 +34,24 @@ public class OrderController {
         log.info("test log with tracing info");
         return orderService.placeOrderDraft(orderRequest)
                 .map(orderResponse -> {
-                    orderResponse.add(linkTo(OrderController.class).slash(orderResponse.getOrderNumber()).withSelfRel());
+                    orderResponse.add(linkTo(OrderController.class).slash(orderResponse.getOrderNumber()).slash(orderResponse.getVersion()).withSelfRel());
                     return orderResponse;
                 });
     }
 
-    @PutMapping("/draft/{orderNumber}")
+    @PutMapping("/draft/{orderNumber}/{versionNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public Mono<OrderResponse> updateOrderDraft(@RequestBody OrderRequest orderRequest, @PathVariable String orderNumber) {
-        OrderResponse response = orderService.updateOrder(orderRequest, orderNumber);
-        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
+    public Mono<OrderResponse> updateOrderDraft(@RequestBody OrderRequest orderRequest, @PathVariable String orderNumber, @PathVariable Integer versionNumber) {
+        OrderResponse response = orderService.updateOrder(orderRequest, orderNumber, versionNumber);
+        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).slash(response.getVersion()).withSelfRel());
         return Mono.just(response);
     }
 
-    @GetMapping("/{orderNumber}")
+    @GetMapping("/{orderNumber}/{versionNumber}")
     @ResponseStatus(HttpStatus.OK)
-    public Mono<OrderResponse> getOrder(@PathVariable String orderNumber) {
-        OrderResponse response = orderService.getOrderByOrderNumber(orderNumber);
-        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).withSelfRel());
+    public Mono<OrderResponse> getOrder(@PathVariable String orderNumber, @PathVariable Integer versionNumber) {
+        OrderResponse response = orderService.getOrderByOrderNumber(orderNumber, versionNumber);
+        response.add(linkTo(OrderController.class).slash(response.getOrderNumber()).slash(response.getVersion()).withSelfRel());
         return Mono.just(response);
     }
 

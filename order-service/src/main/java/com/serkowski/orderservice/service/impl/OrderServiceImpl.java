@@ -1,6 +1,5 @@
 package com.serkowski.orderservice.service.impl;
 
-import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import com.serkowski.orderservice.dto.request.OrderRequest;
 import com.serkowski.orderservice.dto.response.OrderResponse;
 import com.serkowski.orderservice.model.OrderSummary;
@@ -16,8 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
-
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,8 +43,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber) {
-        return orderReadRepository.findByOrderNumber(orderNumber)
+    public OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber, Integer versionNumber) {
+        return orderReadRepository.findByOrderNumberAndVersion(orderNumber, versionNumber)
                 .map(orderSummary -> {
                     orderSummary.setOrderLineItemsList(orderMapper.mapItems(orderRequest.getOrderItems()));
                     orderSummary.setAddress(orderMapper.mapAddress(orderRequest.getAddress()));
@@ -58,8 +55,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public OrderResponse getOrderByOrderNumber(String orderNumber) {
-        return orderReadRepository.findByOrderNumber(orderNumber)
+    public OrderResponse getOrderByOrderNumber(String orderNumber, Integer versionNumber) {
+        return orderReadRepository.findByOrderNumberAndVersion(orderNumber, versionNumber)
                 .map(orderMapper::map)
                 .orElseThrow(() -> new OrderNotFound("Order which number: " + orderNumber + " not exist"));
     }

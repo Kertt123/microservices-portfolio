@@ -18,19 +18,21 @@ public interface OrderService {
     /**
      * Update already existing order draft
      *
-     * @param orderRequest request
-     * @param orderNumber  order number
+     * @param orderRequest  request
+     * @param orderNumber   order number
+     * @param versionNumber version number
      * @return {@link OrderResponse}
      */
-    OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber);
+    OrderResponse updateOrder(OrderRequest orderRequest, String orderNumber, Integer versionNumber);
 
     /**
      * Get order by order number
      *
-     * @param orderNumber order number
+     * @param orderNumber   order number
+     * @param versionNumber version number
      * @return {@link OrderResponse}
      */
-    OrderResponse getOrderByOrderNumber(String orderNumber);
+    OrderResponse getOrderByOrderNumber(String orderNumber, Integer versionNumber);
 
     /**
      * Delete order by order number.

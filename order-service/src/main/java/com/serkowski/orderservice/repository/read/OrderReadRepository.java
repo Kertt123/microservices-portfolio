@@ -9,5 +9,6 @@ import java.util.Optional;
 @Repository
 public interface OrderReadRepository extends JpaRepository<OrderSummary, Long> {
 
+    Optional<OrderSummary> findByOrderNumberAndVersion(String orderNumber, Integer version);
     Optional<OrderSummary> findByOrderNumber(String orderNumber);
 }

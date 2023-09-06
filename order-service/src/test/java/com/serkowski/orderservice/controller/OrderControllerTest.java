@@ -38,7 +38,7 @@ class OrderControllerTest {
     void shouldCreateOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(mapOrderItems());
-        orderRequest.setAddressDto(mapAddress());
+        orderRequest.setAddress(mapAddress());
 
         when(orderService.placeOrderDraft(eq(orderRequest))).thenReturn(Mono.just(OrderResponse.builder().build()));
 
@@ -54,7 +54,7 @@ class OrderControllerTest {
     @Test
     void shouldFailDuringOrderCrateBecauseOfMissingItems() {
         OrderRequest orderRequest = new OrderRequest();
-        orderRequest.setAddressDto(mapAddress());
+        orderRequest.setAddress(mapAddress());
 
         webTestClient.post().uri("/api/order/draft")
                 .body(BodyInserters.fromValue(orderRequest))
@@ -85,7 +85,7 @@ class OrderControllerTest {
     void shouldFailDuringOrderCrateBecauseOfMissingInnerFields() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(List.of(OrderItemRequestDto.builder().build()));
-        orderRequest.setAddressDto(AddressRequestDto.builder().build());
+        orderRequest.setAddress(AddressRequestDto.builder().build());
 
         webTestClient.post().uri("/api/order/draft")
                 .body(BodyInserters.fromValue(orderRequest))
@@ -101,11 +101,11 @@ class OrderControllerTest {
     void shouldUpdateOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(mapOrderItems());
-        orderRequest.setAddressDto(mapAddress());
+        orderRequest.setAddress(mapAddress());
 
-        when(orderService.updateOrder(eq(orderRequest), eq("123"))).thenReturn(OrderResponse.builder().build());
+        when(orderService.updateOrder(eq(orderRequest), eq("123"), eq(1))).thenReturn(OrderResponse.builder().build());
 
-        webTestClient.put().uri("/api/order/draft/123")
+        webTestClient.put().uri("/api/order/draft/123/1")
                 .body(BodyInserters.fromValue(orderRequest))
                 .headers(headers -> headers.setBasicAuth("user", "password"))
                 .accept(MediaType.APPLICATION_JSON)
@@ -118,11 +118,11 @@ class OrderControllerTest {
     void shouldNotUpdateOrderBecauseOfWrongOrderNumber() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(mapOrderItems());
-        orderRequest.setAddressDto(mapAddress());
+        orderRequest.setAddress(mapAddress());
 
-        when(orderService.updateOrder(eq(orderRequest), eq("123"))).thenThrow(OrderNotFound.class);
+        when(orderService.updateOrder(eq(orderRequest), eq("123"), eq(1))).thenThrow(OrderNotFound.class);
 
-        webTestClient.put().uri("/api/order/draft/123")
+        webTestClient.put().uri("/api/order/draft/123/1")
                 .body(BodyInserters.fromValue(orderRequest))
                 .headers(headers -> headers.setBasicAuth("user", "password"))
                 .accept(MediaType.APPLICATION_JSON)
@@ -133,9 +133,9 @@ class OrderControllerTest {
 
     @Test
     void shouldGetOrder() {
-        when(orderService.getOrderByOrderNumber(eq("123"))).thenReturn(OrderResponse.builder().build());
+        when(orderService.getOrderByOrderNumber(eq("123"), eq(1))).thenReturn(OrderResponse.builder().build());
 
-        webTestClient.get().uri("/api/order/123")
+        webTestClient.get().uri("/api/order/123/1")
                 .headers(headers -> headers.setBasicAuth("user", "password"))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -145,9 +145,9 @@ class OrderControllerTest {
 
     @Test
     void shouldNotGetOrderBecauseOfWrongOrderNumber() {
-        when(orderService.getOrderByOrderNumber(eq("123"))).thenThrow(OrderNotFound.class);
+        when(orderService.getOrderByOrderNumber(eq("123"), eq(1))).thenThrow(OrderNotFound.class);
 
-        webTestClient.get().uri("/api/order/123")
+        webTestClient.get().uri("/api/order/123/1")
                 .headers(headers -> headers.setBasicAuth("user", "password"))
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
