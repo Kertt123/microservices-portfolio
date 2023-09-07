@@ -71,7 +71,7 @@ public class OrderServiceImplTest {
     }
 
     @Test
-    void shouldMarkOrderAsNotValid() {
+    void shouldDeleteOrderWhenReservationFailed() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
@@ -83,7 +83,8 @@ public class OrderServiceImplTest {
                 .create(orderService.placeOrderDraft(orderRequest))
                 .verifyError();
 
-        verify(orderWriteRepository, times(2)).save(any(OrderSummary.class));
+        verify(orderWriteRepository).save(any(OrderSummary.class));
+        verify(orderWriteRepository).delete(any(OrderSummary.class));
     }
 
     @Test
@@ -115,7 +116,7 @@ public class OrderServiceImplTest {
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
                 orderService.updateOrder(orderRequest, "testNumber123", 1)
         );
-        assertEquals("Can't update order which is not exist for number: testNumber123", exception.getMessage());
+        assertEquals("Can't update order which is not exist for number: testNumber123 and version 1", exception.getMessage());
     }
 
     @Test
@@ -125,7 +126,7 @@ public class OrderServiceImplTest {
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
                 orderService.getOrderByOrderNumber("testNumber123", 1)
         );
-        assertEquals("Order which number: testNumber123 not exist", exception.getMessage());
+        assertEquals("Order which number: testNumber123 and version 1 not exist", exception.getMessage());
     }
 
     @Test

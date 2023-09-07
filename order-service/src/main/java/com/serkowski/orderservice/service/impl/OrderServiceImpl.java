@@ -33,8 +33,8 @@ public class OrderServiceImpl implements OrderService {
 
         return productService.reserveItems(orderSummary.getOrderNumber(), orderRequest.getOrderItems())
                 .doOnError(exception -> {
-                    orderSummary.setState(State.NOT_VALID);
-                    orderWriteRepository.save(orderSummary);
+                    log.error("Reserve items fail", exception);
+                    orderWriteRepository.delete(orderSummary);
                 })
                 .map(result -> {
                     log.info("Response of reserve items: " + result);
@@ -50,7 +50,7 @@ public class OrderServiceImpl implements OrderService {
                     orderSummary.setAddress(orderMapper.mapAddress(orderRequest.getAddress()));
                     return orderMapper.map(orderWriteRepository.save(orderSummary));
                 })
-                .orElseThrow(() -> new OrderNotFound("Can't update order which is not exist for number: " + orderNumber));
+                .orElseThrow(() -> new OrderNotFound(String.format("Can't update order which is not exist for number: %s and version %d", orderNumber, versionNumber)));
     }
 
     @Override
@@ -58,7 +58,7 @@ public class OrderServiceImpl implements OrderService {
     public OrderResponse getOrderByOrderNumber(String orderNumber, Integer versionNumber) {
         return orderReadRepository.findByOrderNumberAndVersion(orderNumber, versionNumber)
                 .map(orderMapper::map)
-                .orElseThrow(() -> new OrderNotFound("Order which number: " + orderNumber + " not exist"));
+                .orElseThrow(() -> new OrderNotFound(String.format("Order which number: %s and version %d not exist", orderNumber, versionNumber)));
     }
 
     @Override

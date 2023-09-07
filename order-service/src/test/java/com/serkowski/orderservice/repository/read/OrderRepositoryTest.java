@@ -60,6 +60,7 @@ class OrderRepositoryTest {
     static void mongoDbProperties(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", postgres::getJdbcUrl);
     }
+
     @BeforeAll
     static void beforeAll() {
         postgres.start();
@@ -93,7 +94,7 @@ class OrderRepositoryTest {
     }
 
     @Test
-    void shouldPlaceOrderAsNotValid() {
+    void shouldNotPlaceOrderWhenReservationFailed() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
@@ -103,7 +104,7 @@ class OrderRepositoryTest {
                 .create(orderService.placeOrderDraft(orderRequest))
                 .verifyError();
 
-        assertEquals(State.NOT_VALID, orderReadRepository.findAll().get(0).getState());
+        assertEquals(0, orderReadRepository.findAll().size());
     }
 
     @Test
@@ -128,7 +129,7 @@ class OrderRepositoryTest {
         OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
                 orderService.updateOrder(orderRequest, "testNumber123", 0)
         );
-        assertEquals("Can't update order which is not exist for number: testNumber123", exception.getMessage());
+        assertEquals("Can't update order which is not exist for number: testNumber123 and version 0", exception.getMessage());
     }
 
     @Test
