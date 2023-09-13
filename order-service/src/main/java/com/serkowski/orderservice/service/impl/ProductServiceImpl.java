@@ -6,17 +6,18 @@ import com.serkowski.orderservice.dto.request.ReserveItemDto;
 import com.serkowski.orderservice.dto.request.ReserveItemsDto;
 import com.serkowski.orderservice.model.error.ApiCallException;
 import com.serkowski.orderservice.service.api.ProductService;
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.reactor.circuitbreaker.operator.CircuitBreakerOperator;
 import io.github.resilience4j.reactor.retry.RetryOperator;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -24,7 +25,7 @@ import java.util.List;
 
 import static com.serkowski.orderservice.util.ConstantResilience.CIRCUIT_BREAKER_CONFIG_NAME;
 import static com.serkowski.orderservice.util.ConstantResilience.RETRY_CONFIG_NAME;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 
 @Service
 @Slf4j
@@ -47,11 +48,14 @@ public class ProductServiceImpl implements ProductService {
                 .headers(headers -> headers.setBasicAuth("user", "password"))
                 .body(BodyInserters.fromValue(buildBody(orderNumber, orderItems)))
                 .retrieve()
-                .onStatus(httpStatusCode -> BAD_REQUEST == httpStatusCode, response -> response.bodyToMono(ErrorHandlerResponse.class)
-                        .flatMap(errorResponse -> Mono.error(new ApiCallException(errorResponse.getErrorMessage()))))
+                .onStatus(HttpStatusCode::isError, this::handleErrorResponse)
                 .bodyToMono(String.class)
                 .transformDeferred(CircuitBreakerOperator.of(circuitBreaker)) // ORDER - If written below, circuit breaker will record a single failure after the max-retry
-                .transformDeferred(RetryOperator.of(retry));
+                .transformDeferred(RetryOperator.of(retry))
+                .doOnError(CallNotPermittedException.class::isInstance, throwable -> {
+                    log.error("Circuit Breaker is in [{}]... Providing fallback response without calling the API", circuitBreaker.getState());
+                    throw new ApiCallException(SERVICE_UNAVAILABLE, "API service is unavailable");
+                });
     }
 
     private static ReserveItemsDto buildBody(String orderNumber, List<OrderItemRequestDto> orderItems) {
@@ -65,5 +69,12 @@ public class ProductServiceImpl implements ProductService {
                         )
                         .toList())
                 .build();
+    }
+
+    private Mono<ApiCallException> handleErrorResponse(final ClientResponse clientResponse) {
+        log.info("Handling error response: [{}]", clientResponse.statusCode());
+        return clientResponse
+                .bodyToMono(ErrorHandlerResponse.class)
+                .flatMap(res -> Mono.just(new ApiCallException(clientResponse.statusCode(), res.getErrorMessage())));
     }
 }

@@ -3,7 +3,9 @@ package com.serkowski.orderservice.service.impl;
 import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import com.serkowski.orderservice.service.api.ProductService;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,13 +44,13 @@ class ProductServiceImplTest {
     @Mock
     private WebClient.ResponseSpec response;
     @Mock
-    private CircuitBreaker circuitBreaker;
+    private CircuitBreakerRegistry circuitBreakerRegistry;
     @Mock
-    private  Retry retry;
+    private RetryRegistry retryRegistry;
 
     @BeforeEach
     void init() {
-        productService = new ProductServiceImpl(webClientBuilder, circuitBreaker, retry);
+        productService = new ProductServiceImpl(webClientBuilder, circuitBreakerRegistry, retryRegistry);
     }
 
     @Test

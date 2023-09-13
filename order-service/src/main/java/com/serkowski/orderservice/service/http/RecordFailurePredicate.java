@@ -1,5 +1,6 @@
 package com.serkowski.orderservice.service.http;
 
+import com.serkowski.orderservice.model.error.ApiCallException;
 import org.springframework.web.reactive.function.client.WebClientException;
 
 import java.io.IOException;
@@ -13,7 +14,7 @@ public class RecordFailurePredicate implements Predicate<Throwable> {
     }
 
     private boolean recordFailures(Throwable throwable) {
-        return (throwable instanceof TimeoutException || throwable instanceof IOException
-                || throwable instanceof WebClientException);
+        return (throwable instanceof ApiCallException ex && ex.getStatus().is5xxServerError())
+                || throwable instanceof TimeoutException || throwable instanceof IOException || throwable instanceof WebClientException;
     }
 }
