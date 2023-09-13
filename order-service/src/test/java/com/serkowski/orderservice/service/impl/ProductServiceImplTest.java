@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -55,6 +56,7 @@ class ProductServiceImplTest {
 
     @Test
     public void shouldReserveItems() {
+        Mono mock = Mockito.mock(Mono.class);
         when(webClientBuilder.build()).thenReturn(webClient);
         when(webClient.post()).thenReturn(uriSpec);
         when(uriSpec.uri(eq("http://product-service/api/product/items/reserve"))).thenReturn(headerSpec);
@@ -64,7 +66,8 @@ class ProductServiceImplTest {
         when(requestBodySpec.body(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.retrieve()).thenReturn(response);
         when(response.onStatus(any(), any())).thenReturn(response);
-        when(response.bodyToMono(eq(String.class))).thenReturn(Mono.just("success"));
+        when(response.bodyToMono(eq(String.class))).thenReturn(mock);
+        when(mock.transformDeferred(any())).thenReturn(mock).thenReturn(Mono.just("success"));
 
         StepVerifier
                 .create(productService.reserveItems("orderNumber1", List.of(OrderItemRequestDto.builder()
