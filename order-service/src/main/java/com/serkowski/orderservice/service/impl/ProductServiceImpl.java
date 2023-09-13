@@ -1,6 +1,5 @@
 package com.serkowski.orderservice.service.impl;
 
-import com.serkowski.orderservice.dto.ErrorHandlerResponse;
 import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import com.serkowski.orderservice.dto.request.ReserveItemDto;
 import com.serkowski.orderservice.dto.request.ReserveItemsDto;
@@ -15,6 +14,7 @@ import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -45,6 +45,8 @@ public class ProductServiceImpl implements ProductService {
     public Mono<String> reserveItems(String orderNumber, List<OrderItemRequestDto> orderItems) {
         return webClientBuilder.build().post()
                 .uri("http://product-service/api/product/items/reserve")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> headers.setBasicAuth("user", "password"))
                 .body(BodyInserters.fromValue(buildBody(orderNumber, orderItems)))
                 .retrieve()
@@ -74,7 +76,8 @@ public class ProductServiceImpl implements ProductService {
     private Mono<ApiCallException> handleErrorResponse(final ClientResponse clientResponse) {
         log.info("Handling error response: [{}]", clientResponse.statusCode());
         return clientResponse
-                .bodyToMono(ErrorHandlerResponse.class)
-                .flatMap(res -> Mono.just(new ApiCallException(clientResponse.statusCode(), res.getErrorMessage())));
+                .bodyToMono(String.class)
+                .defaultIfEmpty("")
+                .flatMap(res -> Mono.just(new ApiCallException(clientResponse.statusCode(), res)));
     }
 }
