@@ -1,18 +1,16 @@
 package com.serkowski.productservice.service.impl;
 
 import com.serkowski.productservice.dto.ProductItemDto;
-import com.serkowski.productservice.dto.request.ReserveItem;
-import com.serkowski.productservice.dto.request.ReserveItemsDto;
+import com.serkowski.productservice.dto.request.ReserveItemDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.ProductItem;
 import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
-import com.serkowski.productservice.repository.product.ProductReadRepository;
-import com.serkowski.productservice.repository.product.ProductWriteRepository;
 import com.serkowski.productservice.repository.product.item.ProductItemReadRepository;
 import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
+import com.serkowski.productservice.service.api.ProductInnerService;
 import com.serkowski.productservice.service.api.ProductItemService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,14 +31,13 @@ import java.util.UUID;
 @Transactional
 public class ProductItemServiceImpl implements ProductItemService {
 
-    private final ProductReadRepository productReadRepository;
-    private final ProductWriteRepository productWriteRepository;
+    private final ProductInnerService productInnerService;
     private final ProductItemReadRepository productItemReadRepository;
     private final ProductItemWriteRepository productItemWriteRepository;
 
     @Override
     public ProductItemDto addItem(String productId, ProductItemDto productItemRequest) {
-        return productReadRepository.findById(productId)
+        return productInnerService.findById(productId)
                 .map(product -> {
                     ProductItem item = ProductItem.builder()
                             .id(UUID.randomUUID().toString())
@@ -52,7 +49,7 @@ public class ProductItemServiceImpl implements ProductItemService {
                             .ifPresentOrElse(productItems -> productItems.add(item), () -> product.setItems(List.of(item)));
                     try {
                         ProductItem productItem = productItemWriteRepository.save(item);
-                        productWriteRepository.save(product);
+                        productInnerService.saveProduct(product);
                         return productItem;
                     } catch (DuplicateKeyException e) {
                         throw new AddItemIndexException("Product with serial number: " + productItemRequest.getSerialNumber() + " already exist");
@@ -70,26 +67,45 @@ public class ProductItemServiceImpl implements ProductItemService {
     }
 
     @Override
-    public void reserveItems(ReserveItemsDto reserveItemsDto) {
+    public List<String> reserveItems(List<ReserveItemDto> reserveItems) {
         List<ProductItem> reservedItems = new ArrayList<>();
-        reserveItemsDto.getItems()
-                .forEach(reserveItem -> productReadRepository.findById(reserveItem.getItemRef())
+        reserveItems
+                .forEach(reserveItem -> productInnerService.findById(reserveItem.getItemRef())
                         .ifPresent(product -> reservedItems.addAll(getProductItems(reserveItem, product))));
         if (CollectionUtils.isEmpty(reservedItems)) {
             throw new ReservationItemsException("Reservation list is empty because of product not found or empty items list");
         }
 
-        productItemWriteRepository.saveAll(reservedItems.stream().map(item -> markItemAsReserved(item, reserveItemsDto.getOrderNumber())).toList());
+        productItemWriteRepository.saveAll(reservedItems.stream()
+                .map(this::markItemAsReserved)
+                .toList());
+        return reservedItems.stream()
+                .map(ProductItem::getId)
+                .toList();
     }
 
-    private ProductItem markItemAsReserved(ProductItem productItem, String orderNumber) {
+    @Override
+    public void unlockReservedItems(List<String> reserveItems) {
+        productItemWriteRepository.saveAll(productItemReadRepository.findByIds(reserveItems)
+                .stream()
+                .map(this::unlockItem)
+                .toList());
+    }
+
+
+    private ProductItem markItemAsReserved(ProductItem productItem) {
         productItem.setAvailability(Availability.RESERVED);
         productItem.setReservationTimeDate(LocalDateTime.now());
-        productItem.setReservationOrderNumber(orderNumber);
         return productItem;
     }
 
-    private List<ProductItem> getProductItems(ReserveItem reserveItem, Product product) {
+    private ProductItem unlockItem(ProductItem productItem) {
+        productItem.setAvailability(Availability.AVAILABLE);
+        productItem.setReservationTimeDate(null);
+        return productItem;
+    }
+
+    private List<ProductItem> getProductItems(ReserveItemDto reserveItem, Product product) {
         List<ProductItem> list = product.getItems().stream()
                 .filter(productItem -> Availability.AVAILABLE == productItem.getAvailability())
                 .limit(reserveItem.getCount())

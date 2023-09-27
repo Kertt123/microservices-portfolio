@@ -3,8 +3,12 @@ package com.serkowski.productservice.controller;
 import com.serkowski.productservice.config.SecurityConfig;
 import com.serkowski.productservice.dto.ErrorHandlerResponse;
 import com.serkowski.productservice.dto.ProductDto;
+import com.serkowski.productservice.dto.request.ReserveItemDto;
+import com.serkowski.productservice.dto.request.ReservationRequestDto;
 import com.serkowski.productservice.model.error.ProductNotFound;
+import com.serkowski.productservice.model.error.ReservationItemsException;
 import com.serkowski.productservice.service.api.ProductService;
+import com.serkowski.productservice.service.api.ReservationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -32,6 +36,7 @@ class ProductControllerTest {
     private WebTestClient webTestClient;
     @MockBean
     private ProductService productService;
+
 
     @Test
     void shouldCreateProduct() {

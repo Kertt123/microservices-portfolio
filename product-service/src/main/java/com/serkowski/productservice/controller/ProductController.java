@@ -35,7 +35,6 @@ public class ProductController {
         return Mono.just(response);
     }
 
-    //
     @GetMapping("/{productId}")
     @ResponseStatus(HttpStatus.OK)
     public Mono<ProductDto> getProduct(@PathVariable String productId) {

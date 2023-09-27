@@ -22,5 +22,4 @@ public class ProductItem {
     private String serialNumber;
     private LocalDateTime updateDate;
     private LocalDateTime reservationTimeDate;
-    private String reservationOrderNumber;
 }

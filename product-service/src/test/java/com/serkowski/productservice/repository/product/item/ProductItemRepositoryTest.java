@@ -1,8 +1,7 @@
 package com.serkowski.productservice.repository.product.item;
 
 import com.serkowski.productservice.dto.ProductItemDto;
-import com.serkowski.productservice.dto.request.ReserveItem;
-import com.serkowski.productservice.dto.request.ReserveItemsDto;
+import com.serkowski.productservice.dto.request.ReserveItemDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.error.AddItemIndexException;
@@ -10,7 +9,9 @@ import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
 import com.serkowski.productservice.repository.product.ProductReadRepository;
 import com.serkowski.productservice.repository.product.ProductWriteRepository;
+import com.serkowski.productservice.service.api.ProductInnerService;
 import com.serkowski.productservice.service.api.ProductItemService;
+import com.serkowski.productservice.service.impl.ProductInnerServiceImpl;
 import com.serkowski.productservice.service.impl.ProductItemServiceImpl;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -41,6 +42,9 @@ class ProductItemRepositoryTest {
 
     @Autowired
     ProductWriteRepository productWriteRepository;
+
+    @Autowired
+    ProductInnerService productInnerService;
     @Autowired
     ProductItemReadRepository productItemReadRepository;
 
@@ -71,7 +75,8 @@ class ProductItemRepositoryTest {
 
     @BeforeEach
     void clean() {
-        productItemService = new ProductItemServiceImpl(productReadRepository, productWriteRepository, productItemReadRepository, productItemWriteRepository);
+        productInnerService = new ProductInnerServiceImpl(productReadRepository, productWriteRepository);
+        productItemService = new ProductItemServiceImpl(productInnerService, productItemReadRepository, productItemWriteRepository);
         productWriteRepository.deleteAll();
         productItemWriteRepository.deleteAll();
     }
@@ -166,18 +171,15 @@ class ProductItemRepositoryTest {
         ProductItemDto item1 = productItemService.addItem(save.getId(), productItemDto);
         ProductItemDto item2 = productItemService.addItem(save.getId(), productItemDto2);
 
-        productItemService.reserveItems(ReserveItemsDto.builder()
-                .orderNumber("orderNumber1")
-                .items(List.of(ReserveItem.builder()
+        productItemService.reserveItems(List.of(ReserveItemDto.builder()
                         .itemRef(save.getId())
                         .count(2)
                         .build()
-                ))
-                .build());
+                ));
 
         assertTrue(productItemReadRepository.findByIds(List.of(item1.getId().toString(), item2.getId().toString()))
                 .stream()
-                .allMatch(productItem -> Availability.RESERVED == productItem.getAvailability() && "orderNumber1".equals(productItem.getReservationOrderNumber())));
+                .allMatch(productItem -> Availability.RESERVED == productItem.getAvailability()));
     }
 
     @Test
@@ -197,13 +199,11 @@ class ProductItemRepositoryTest {
         });
 
         ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
-                productItemService.reserveItems(ReserveItemsDto.builder()
-                        .items(List.of(ReserveItem.builder()
+                productItemService.reserveItems(List.of(ReserveItemDto.builder()
                                 .itemRef(save.getId())
                                 .count(2)
                                 .build()
-                        ))
-                        .build())
+                       ))
         );
 
         assertEquals("The amount of the available products is not enough to make a full reservation", exception.getMessage());

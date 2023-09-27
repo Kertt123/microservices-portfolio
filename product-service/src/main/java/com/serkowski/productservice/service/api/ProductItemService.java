@@ -1,7 +1,9 @@
 package com.serkowski.productservice.service.api;
 
 import com.serkowski.productservice.dto.ProductItemDto;
-import com.serkowski.productservice.dto.request.ReserveItemsDto;
+import com.serkowski.productservice.dto.request.ReserveItemDto;
+
+import java.util.List;
 
 public interface ProductItemService {
 
@@ -26,7 +28,15 @@ public interface ProductItemService {
     /**
      * Reserve items.
      *
-     * @param reserveItemsDto list of items to reserve
+     * @param reserveItems list of items to reserve
+     * @return ids of reserved items
      */
-    void reserveItems(ReserveItemsDto reserveItemsDto);
+    List<String> reserveItems(List<ReserveItemDto> reserveItems);
+
+    /**
+     * Unlock reserved items.
+     *
+     * @param reserveItems list of items to unlock
+     */
+    void unlockReservedItems(List<String> reserveItems);
 }

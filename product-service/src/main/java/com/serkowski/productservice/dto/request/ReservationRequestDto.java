@@ -12,11 +12,11 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReserveItemsDto {
+public class ReservationRequestDto {
 
     @NotEmpty(message = "Order number can't be empty")
     private String orderNumber;
 
     @NotEmpty(message = "Reservation items should not be empty")
-    private List<ReserveItem> items;
+    private List<ReserveItemDto> items;
 }

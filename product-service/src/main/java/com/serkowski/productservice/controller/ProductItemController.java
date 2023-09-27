@@ -1,7 +1,6 @@
 package com.serkowski.productservice.controller;
 
 import com.serkowski.productservice.dto.ProductItemDto;
-import com.serkowski.productservice.dto.request.ReserveItemsDto;
 import com.serkowski.productservice.service.api.ProductItemService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,12 +33,5 @@ public class ProductItemController {
         ProductItemDto response = productItemService.getItemById(productItemId);
         response.add(linkTo(ProductItemController.class).slash(response.getId()).withSelfRel());
         return Mono.just(response);
-    }
-
-    @PostMapping("/items/reserve")
-    @ResponseStatus(HttpStatus.OK)
-    public Mono<String> reserveItems(@Valid @RequestBody ReserveItemsDto reserveItemsDto) {
-        productItemService.reserveItems(reserveItemsDto);
-        return Mono.just("success");
     }
 }

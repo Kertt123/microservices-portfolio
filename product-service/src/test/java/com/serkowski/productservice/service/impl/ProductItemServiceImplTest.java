@@ -1,18 +1,16 @@
 package com.serkowski.productservice.service.impl;
 
 import com.serkowski.productservice.dto.ProductItemDto;
-import com.serkowski.productservice.dto.request.ReserveItem;
-import com.serkowski.productservice.dto.request.ReserveItemsDto;
+import com.serkowski.productservice.dto.request.ReserveItemDto;
 import com.serkowski.productservice.model.Availability;
 import com.serkowski.productservice.model.Product;
 import com.serkowski.productservice.model.ProductItem;
 import com.serkowski.productservice.model.error.AddItemIndexException;
 import com.serkowski.productservice.model.error.ProductNotFound;
 import com.serkowski.productservice.model.error.ReservationItemsException;
-import com.serkowski.productservice.repository.product.ProductReadRepository;
-import com.serkowski.productservice.repository.product.ProductWriteRepository;
 import com.serkowski.productservice.repository.product.item.ProductItemReadRepository;
 import com.serkowski.productservice.repository.product.item.ProductItemWriteRepository;
+import com.serkowski.productservice.service.api.ProductInnerService;
 import com.serkowski.productservice.service.api.ProductItemService;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,6 +28,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,17 +39,15 @@ class ProductItemServiceImplTest {
 
     private ProductItemService productItemService;
     @Mock
-    private ProductReadRepository productReadRepository;
-    @Mock
-    private ProductWriteRepository productWriteRepository;
-    @Mock
     private ProductItemReadRepository productItemReadRepository;
     @Mock
     private ProductItemWriteRepository productItemWriteRepository;
+    @Mock
+    private ProductInnerService productInnerService;
 
     @BeforeEach
     void init() {
-        productItemService = new ProductItemServiceImpl(productReadRepository, productWriteRepository, productItemReadRepository, productItemWriteRepository);
+        productItemService = new ProductItemServiceImpl(productInnerService, productItemReadRepository, productItemWriteRepository);
     }
 
     @Test
@@ -66,12 +63,9 @@ class ProductItemServiceImplTest {
                 .updateDate(time)
                 .serialNumber("serialNumber")
                 .build();
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
                 .id(uuid.toString())
                 .build()));
-        when(productWriteRepository.save(any())).thenReturn(Product.builder()
-                .id(uuid.toString())
-                .build());
         when(productItemWriteRepository.save(any())).thenReturn(ProductItem.builder()
                 .id(uuid.toString())
                 .availability(Availability.AVAILABLE)
@@ -97,13 +91,10 @@ class ProductItemServiceImplTest {
                 .updateDate(time)
                 .serialNumber("serialNumber")
                 .build();
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
                 .id(uuid.toString())
                 .items(getProductItems())
                 .build()));
-        when(productWriteRepository.save(any())).thenReturn(Product.builder()
-                .id(uuid.toString())
-                .build());
         when(productItemWriteRepository.save(any())).thenReturn(ProductItem.builder()
                 .id(uuid.toString())
                 .availability(Availability.AVAILABLE)
@@ -121,7 +112,7 @@ class ProductItemServiceImplTest {
         ProductItemDto productItemDto = ProductItemDto.builder()
                 .serialNumber("serialNumber")
                 .build();
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.empty());
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.empty());
 
         ProductNotFound exception = assertThrows(ProductNotFound.class, () ->
                 productItemService.addItem("123", productItemDto)
@@ -136,7 +127,7 @@ class ProductItemServiceImplTest {
                 .serialNumber("serialNumber123")
                 .build();
 
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder()
                 .id(uuid.toString())
                 .build()));
         when(productItemWriteRepository.save(any())).thenThrow(DuplicateKeyException.class);
@@ -183,21 +174,19 @@ class ProductItemServiceImplTest {
                 .id(UUID.randomUUID().toString())
                 .availability(Availability.AVAILABLE)
                 .build();
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item1, item2)).build()));
-        when(productReadRepository.findById(eq("321"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item3)).build()));
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item1, item2)).build()));
+        when(productInnerService.findById(eq("321"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item3)).build()));
         when(productItemWriteRepository.saveAll(itemsCaptor.capture())).thenReturn(Collections.emptyList());
 
-        productItemService.reserveItems(ReserveItemsDto.builder()
-                .items(List.of(ReserveItem.builder()
-                                .itemRef("123")
-                                .count(2)
-                                .build(),
-                        ReserveItem.builder()
-                                .itemRef("321")
-                                .count(1)
-                                .build()
-                ))
-                .build());
+        productItemService.reserveItems(List.of(ReserveItemDto.builder()
+                        .itemRef("123")
+                        .count(2)
+                        .build(),
+                ReserveItemDto.builder()
+                        .itemRef("321")
+                        .count(1)
+                        .build()
+        ));
 
         itemsCaptor.getValue()
                 .forEach(item -> assertEquals(Availability.RESERVED, item.getAvailability()));
@@ -205,16 +194,13 @@ class ProductItemServiceImplTest {
 
     @Test
     void shouldThrowExceptionDuringReserveBecauseProductWasNotFound() {
-        ReserveItemsDto request = ReserveItemsDto.builder()
-                .items(List.of(ReserveItem.builder()
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.empty());
+
+        ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
+                productItemService.reserveItems(List.of(ReserveItemDto.builder()
                         .itemRef("123")
                         .count(2)
                         .build()))
-                .build();
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.empty());
-
-        ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
-                productItemService.reserveItems(request)
         );
         assertEquals("Reservation list is empty because of product not found or empty items list", exception.getMessage());
     }
@@ -229,19 +215,37 @@ class ProductItemServiceImplTest {
                 .serialNumber("serial2")
                 .availability(Availability.AVAILABLE)
                 .build();
-        when(productReadRepository.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item1, item2)).build()));
+        when(productInnerService.findById(eq("123"))).thenReturn(Optional.ofNullable(Product.builder().items(List.of(item1, item2)).build()));
 
         ReservationItemsException exception = assertThrows(ReservationItemsException.class, () ->
-                productItemService.reserveItems(ReserveItemsDto.builder()
-                        .orderNumber("orderNumber1")
-                        .items(List.of(ReserveItem.builder()
-                                .itemRef("123")
-                                .count(2)
-                                .build()
-                        ))
-                        .build())
+                productItemService.reserveItems(List.of(ReserveItemDto.builder()
+                        .itemRef("123")
+                        .count(2)
+                        .build()
+                ))
         );
         assertEquals("The amount of the available products is not enough to make a full reservation", exception.getMessage());
+    }
+
+    @Test
+    public void shouldUnlockItems() {
+        List<String> itemsToUnlock = List.of("1111", "22222");
+        ProductItem item = ProductItem.builder()
+                .availability(Availability.RESERVED)
+                .reservationTimeDate(LocalDateTime.now())
+                .build();
+
+        when(productItemReadRepository.findByIds(eq(itemsToUnlock)))
+                .thenReturn(List.of(item, ProductItem.builder().build()));
+
+        productItemService.unlockReservedItems(itemsToUnlock);
+
+        verify(productItemWriteRepository).saveAll(any());
+        assertAll(
+                "Assert result",
+                () -> assertNull(item.getReservationTimeDate()),
+                () -> assertEquals(Availability.AVAILABLE, item.getAvailability())
+        );
     }
 
     @NotNull

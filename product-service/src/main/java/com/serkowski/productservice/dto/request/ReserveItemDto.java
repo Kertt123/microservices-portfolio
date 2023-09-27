@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReserveItem {
+public class ReserveItemDto {
 
     @NotEmpty(message = "Item reference can't be empty")
     private String itemRef;
