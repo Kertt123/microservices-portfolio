@@ -1,8 +1,9 @@
 package com.serkowski.orderservice.service.impl;
 
-import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
+import com.serkowski.orderservice.dto.ErrorHandlerResponse;
 import com.serkowski.orderservice.dto.request.ReserveItemDto;
 import com.serkowski.orderservice.dto.request.ReserveItemsDto;
+import com.serkowski.orderservice.model.OrderItem;
 import com.serkowski.orderservice.model.error.ApiCallException;
 import com.serkowski.orderservice.service.api.ProductService;
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
@@ -43,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Mono<String> reserveItems(String orderNumber, List<OrderItemRequestDto> orderItems) {
+    public Mono<String> reserveItems(String orderNumber, List<OrderItem> orderItems) {
         return webClientBuilder.build().post()
                 .uri(RESERVE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -61,7 +62,7 @@ public class ProductServiceImpl implements ProductService {
                 });
     }
 
-    private static ReserveItemsDto buildBody(String orderNumber, List<OrderItemRequestDto> orderItems) {
+    private static ReserveItemsDto buildBody(String orderNumber, List<OrderItem> orderItems) {
         return ReserveItemsDto.builder()
                 .orderNumber(orderNumber)
                 .items(orderItems.stream()
@@ -76,6 +77,11 @@ public class ProductServiceImpl implements ProductService {
 
     private Mono<ApiCallException> handleErrorResponse(final ClientResponse clientResponse) {
         log.info("Handling error response: [{}]", clientResponse.statusCode());
+        if (clientResponse.statusCode() == HttpStatusCode.valueOf(400)) {
+            return clientResponse
+                    .bodyToMono(ErrorHandlerResponse.class)
+                    .flatMap(res -> Mono.just(new ApiCallException(clientResponse.statusCode(), res.getErrorMessage())));
+        }
         return clientResponse
                 .bodyToMono(String.class)
                 .defaultIfEmpty("")

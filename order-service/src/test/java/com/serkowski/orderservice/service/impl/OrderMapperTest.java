@@ -32,7 +32,6 @@ class OrderMapperTest {
         assertAll(
                 "Map request to summary",
                 () -> assertEquals(1, result.getOrderLineItemsList().get(0).getCount(), "Count should be 1"),
-                () -> assertEquals("name", result.getOrderLineItemsList().get(0).getItemName(), "Item name should be \"name\""),
                 () -> assertEquals("ref1", result.getOrderLineItemsList().get(0).getItemRef(), "Item reference should be \"ref1\""),
                 () -> assertEquals("test", result.getAddress().getAddressLine1(), "First address line is \"test\""),
                 () -> assertEquals("test2", result.getAddress().getAddressLine2(), "Second address line is \"test2\""),
@@ -63,7 +62,6 @@ class OrderMapperTest {
                 () -> assertEquals("test123", result.getOrderNumber(), "Order number should be \"test123\""),
                 () -> assertEquals("DRAFT", result.getState(), "State should be \"draft\""),
                 () -> assertEquals(12, result.getOrderItems().get(0).getCount(), "Count should be 12"),
-                () -> assertEquals("item name", result.getOrderItems().get(0).getItemName(), "Item name should be \"item name\""),
                 () -> assertEquals("ref1", result.getOrderItems().get(0).getItemRef(), "Item reference should be \"ref1\""),
                 () -> assertEquals("line1", result.getAddress().getAddressLine1(), "First address line is \"line1\""),
                 () -> assertEquals("line2", result.getAddress().getAddressLine2(), "Second address line is \"line2\""),
@@ -76,7 +74,6 @@ class OrderMapperTest {
     void shouldMapItemsRequestToEntity() {
         OrderItemRequestDto itemRequestDto = OrderItemRequestDto.builder()
                 .count(1)
-                .itemName("item1")
                 .itemRef("ref1")
                 .build();
 
@@ -84,7 +81,6 @@ class OrderMapperTest {
 
         assertAll(
                 "Map request items to entity list",
-                () -> assertEquals("item1", result.get(0).getItemName(), "Item name should be \"item1\""),
                 () -> assertEquals(1, result.get(0).getCount(), "Count should be 1"),
                 () -> assertEquals("ref1", result.get(0).getItemRef(), "Item reference should be \"ref1\"")
         );
@@ -114,7 +110,6 @@ class OrderMapperTest {
         return List.of(OrderItem.builder()
                 .id(1L)
                 .count(12)
-                .itemName("item name")
                 .itemRef("ref1")
                 .build());
     }
@@ -122,7 +117,6 @@ class OrderMapperTest {
     private List<OrderItemRequestDto> orderItems() {
         OrderItemRequestDto orderItemRequestDto = new OrderItemRequestDto();
         orderItemRequestDto.setCount(1);
-        orderItemRequestDto.setItemName("name");
         orderItemRequestDto.setItemRef("ref1");
         return List.of(orderItemRequestDto);
     }

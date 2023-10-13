@@ -7,6 +7,7 @@ import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
 import com.serkowski.orderservice.dto.request.OrderRequest;
 import com.serkowski.orderservice.dto.response.OrderResponse;
 import com.serkowski.orderservice.model.error.OrderNotFound;
+import com.serkowski.orderservice.model.error.ValidationException;
 import com.serkowski.orderservice.service.api.OrderService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +95,31 @@ class OrderControllerTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(ErrorHandlerResponse.class)
-                .consumeWith(response -> assertEquals(6, response.getResponseBody().getErrors().size()));
+                .consumeWith(response -> assertEquals(5, response.getResponseBody().getErrors().size()));
+    }
+
+    @Test
+    void shouldAcceptOrder() {
+        when(orderService.acceptOrder(eq("123"), eq(1))).thenReturn(Mono.just(OrderResponse.builder().build()));
+
+        webTestClient.post().uri("/api/order/accept/123/1")
+                .headers(headers -> headers.setBasicAuth("user", "password"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(OrderResponse.class);
+    }
+
+    @Test
+    void shouldFailDuringOrderAccept() {
+        when(orderService.acceptOrder(eq("123"), eq(1))).thenThrow(ValidationException.class);
+
+        webTestClient.post().uri("/api/order/accept/123/1")
+                .headers(headers -> headers.setBasicAuth("user", "password"))
+                .accept(MediaType.APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(ErrorHandlerResponse.class);
     }
 
     @Test
@@ -180,7 +205,6 @@ class OrderControllerTest {
         return List.of(OrderItemRequestDto.builder()
                 .count(2)
                 .itemRef("ref1")
-                .itemName("name1")
                 .build());
     }
 

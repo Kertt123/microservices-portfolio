@@ -16,6 +16,15 @@ public interface OrderService {
     Mono<OrderResponse> placeOrderDraft(OrderRequest orderRequest);
 
     /**
+     * Place order draft.
+     *
+     * @param orderNumber order number
+     * @param versionNumber version number
+     * @return {@link OrderResponse}
+     */
+    Mono<OrderResponse> acceptOrder(String orderNumber, Integer versionNumber);
+
+    /**
      * Update already existing order draft
      *
      * @param orderRequest  request

@@ -16,6 +16,5 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private int count;
-    private String itemName;
     private String itemRef;
 }

@@ -16,8 +16,6 @@ public class OrderItemRequestDto {
 
     @Min(value = 1, message = "Item count need to be positive number")
     private int count;
-    @NotEmpty(message = "Item name can't be empty")
-    private String itemName;
     @NotEmpty(message = "Item reference can't be empty")
     private String itemRef;
 }

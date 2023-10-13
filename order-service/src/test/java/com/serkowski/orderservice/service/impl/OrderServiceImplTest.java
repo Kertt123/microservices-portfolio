@@ -9,6 +9,7 @@ import com.serkowski.orderservice.model.OrderItem;
 import com.serkowski.orderservice.model.OrderSummary;
 import com.serkowski.orderservice.model.State;
 import com.serkowski.orderservice.model.error.OrderNotFound;
+import com.serkowski.orderservice.model.error.ValidationException;
 import com.serkowski.orderservice.repository.read.OrderReadRepository;
 import com.serkowski.orderservice.repository.write.OrderWriteRepository;
 import com.serkowski.orderservice.service.api.OrderMapper;
@@ -18,6 +19,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Mono;
@@ -30,7 +33,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class OrderServiceImplTest {
@@ -46,6 +50,9 @@ public class OrderServiceImplTest {
     @Mock
     private ProductService productService;
 
+    @Captor
+    private ArgumentCaptor<OrderSummary> orderSummaryArgumentCaptor;
+
     @BeforeEach
     void init() {
         orderService = new OrderServiceImpl(orderWriteRepository, orderReadRepository, orderMapper, productService);
@@ -56,35 +63,51 @@ public class OrderServiceImplTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
-        when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
         when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
         when(orderMapper.map(any(OrderSummary.class))).thenReturn(OrderResponse.builder().build());
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
 
-        StepVerifier
-                .create(orderService.placeOrderDraft(orderRequest))
-                .assertNext(Assertions::assertNotNull)
-                .verifyComplete();
+        StepVerifier.create(orderService.placeOrderDraft(orderRequest)).assertNext(Assertions::assertNotNull).verifyComplete();
 
         verify(orderWriteRepository).save(any(OrderSummary.class));
         verify(orderMapper).map(any(OrderSummary.class));
     }
 
     @Test
-    void shouldDeleteOrderWhenReservationFailed() {
-        OrderRequest orderRequest = new OrderRequest();
-        orderRequest.setOrderItems(orderItems());
-        orderRequest.setAddress(address());
-        when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
-        when(orderMapper.map(eq(orderRequest), eq(State.DRAFT))).thenReturn(OrderSummary.builder().build());
+    void shouldAcceptOrder() {
+        OrderSummary orderSummary = OrderSummary.builder().state(State.DRAFT).orderLineItemsList(List.of(OrderItem.builder().build())).build();
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("123"), eq(1))).thenReturn(Optional.ofNullable(orderSummary));
+        when(orderMapper.map(eq(orderSummary))).thenReturn(OrderResponse.builder().build());
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
         when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
 
-        StepVerifier
-                .create(orderService.placeOrderDraft(orderRequest))
-                .verifyError();
+        StepVerifier.create(orderService.acceptOrder("123", 1)).assertNext(Assertions::assertNotNull).verifyComplete();
 
         verify(orderWriteRepository).save(any(OrderSummary.class));
-        verify(orderWriteRepository).delete(any(OrderSummary.class));
+        verify(orderMapper).map(any(OrderSummary.class));
+        assertEquals(State.ACCEPTED, orderSummary.getState());
+    }
+
+    @Test
+    void shouldNotAcceptOrderBecauseOfWrongState() {
+        OrderSummary orderSummary = OrderSummary.builder().state(State.ACCEPTED).orderLineItemsList(List.of(OrderItem.builder().build())).build();
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("123"), eq(1))).thenReturn(Optional.ofNullable(orderSummary));
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> orderService.acceptOrder("123", 1));
+        assertEquals("Incorrect state: ACCEPTED of order: 123 version: 1", exception.getMessage());
+    }
+
+    @Test
+    void shouldMarkOrderAsInvalidWhenReservationFailed() {
+        OrderSummary orderSummary = OrderSummary.builder().state(State.DRAFT).orderLineItemsList(List.of(OrderItem.builder().build())).build();
+        when(orderReadRepository.findByOrderNumberAndVersion(eq("123"), eq(1))).thenReturn(Optional.ofNullable(orderSummary));
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
+        when(orderWriteRepository.save(any())).thenReturn(prepareOrder());
+
+        StepVerifier.create(orderService.acceptOrder("123", 1)).verifyError();
+
+        verify(orderWriteRepository).save(any(OrderSummary.class));
+        assertEquals(State.INVALID, orderSummary.getState());
     }
 
     @Test
@@ -113,9 +136,7 @@ public class OrderServiceImplTest {
         orderRequest.setAddress(address());
         when(orderReadRepository.findByOrderNumberAndVersion(eq("testNumber123"), eq(1))).thenReturn(Optional.empty());
 
-        OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
-                orderService.updateOrder(orderRequest, "testNumber123", 1)
-        );
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> orderService.updateOrder(orderRequest, "testNumber123", 1));
         assertEquals("Can't update order which is not exist for number: testNumber123 and version 1", exception.getMessage());
     }
 
@@ -123,9 +144,7 @@ public class OrderServiceImplTest {
     void shouldThrowExceptionDuringGetOrder() {
         when(orderReadRepository.findByOrderNumberAndVersion(eq("testNumber123"), eq(1))).thenReturn(Optional.empty());
 
-        OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
-                orderService.getOrderByOrderNumber("testNumber123", 1)
-        );
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> orderService.getOrderByOrderNumber("testNumber123", 1));
         assertEquals("Order which number: testNumber123 and version 1 not exist", exception.getMessage());
     }
 
@@ -154,25 +173,17 @@ public class OrderServiceImplTest {
     void shouldThrowExceptionDuringDeleteOrder() {
         when(orderReadRepository.findByOrderNumber(eq("testNumber123"))).thenReturn(Optional.empty());
 
-        OrderNotFound exception = assertThrows(OrderNotFound.class, () ->
-                orderService.deleteOrderByOrderNumber("testNumber123")
-        );
+        OrderNotFound exception = assertThrows(OrderNotFound.class, () -> orderService.deleteOrderByOrderNumber("testNumber123"));
         assertEquals("Order which number: testNumber123 not exist, so can't be deleted", exception.getMessage());
     }
 
     private OrderSummary prepareOrder() {
-        return OrderSummary.builder()
-                .id(1L)
-                .orderLineItemsList(List.of(OrderItem.builder()
-                        .itemRef("ref1")
-                        .build()))
-                .build();
+        return OrderSummary.builder().id(1L).orderLineItemsList(List.of(OrderItem.builder().itemRef("ref1").build())).build();
     }
 
     private List<OrderItemRequestDto> orderItems() {
         OrderItemRequestDto orderItemRequestDto = new OrderItemRequestDto();
         orderItemRequestDto.setCount(1);
-        orderItemRequestDto.setItemName("name");
         orderItemRequestDto.setItemRef("ref1");
         return List.of(orderItemRequestDto);
     }

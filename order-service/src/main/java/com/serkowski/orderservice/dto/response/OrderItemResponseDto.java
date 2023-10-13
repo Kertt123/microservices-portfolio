@@ -11,6 +11,5 @@ public class OrderItemResponseDto {
 
     private Long id;
     private int count;
-    private String itemName;
     private String itemRef;
 }

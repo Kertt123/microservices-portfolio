@@ -21,5 +21,4 @@ public class ProductItem {
     @Indexed(unique = true)
     private String serialNumber;
     private LocalDateTime updateDate;
-    private LocalDateTime reservationTimeDate;
 }

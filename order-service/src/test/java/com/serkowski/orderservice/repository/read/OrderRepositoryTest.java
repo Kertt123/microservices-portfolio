@@ -11,6 +11,7 @@ import com.serkowski.orderservice.service.api.OrderMapper;
 import com.serkowski.orderservice.service.api.OrderService;
 import com.serkowski.orderservice.service.api.ProductService;
 import com.serkowski.orderservice.service.impl.OrderServiceImpl;
+import jakarta.validation.ValidationException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -20,6 +21,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -83,7 +85,6 @@ class OrderRepositoryTest {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
-        when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
 
         StepVerifier
                 .create(orderService.placeOrderDraft(orderRequest))
@@ -94,17 +95,37 @@ class OrderRepositoryTest {
     }
 
     @Test
-    void shouldNotPlaceOrderWhenReservationFailed() {
+    @Transactional
+    void shouldAcceptOrder() {
         OrderRequest orderRequest = new OrderRequest();
         orderRequest.setOrderItems(orderItems());
         orderRequest.setAddress(address());
-        when(productService.reserveItems(any(), any())).thenReturn(Mono.error(new Exception()));
+        OrderSummary save = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.just("success"));
 
         StepVerifier
-                .create(orderService.placeOrderDraft(orderRequest))
+                .create(orderService.acceptOrder(save.getOrderNumber(), save.getVersion()))
+                .assertNext(Assertions::assertNotNull)
+                .verifyComplete();
+
+        orderReadRepository.findById(save.getId())
+                .ifPresent(orderSummary -> assertEquals(State.ACCEPTED, orderSummary.getState()));
+    }
+
+    @Test
+    void shouldMarkOrderAsInvalidBecauseOfReservationFail() {
+        OrderRequest orderRequest = new OrderRequest();
+        orderRequest.setOrderItems(orderItems());
+        orderRequest.setAddress(address());
+        OrderSummary save = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
+        when(productService.reserveItems(any(), any())).thenReturn(Mono.error(ValidationException::new));
+
+        StepVerifier
+                .create(orderService.acceptOrder(save.getOrderNumber(), save.getVersion()))
                 .verifyError();
 
-        assertEquals(0, orderReadRepository.findAll().size());
+        orderReadRepository.findById(save.getId())
+                .ifPresent(orderSummary -> assertEquals(State.INVALID, orderSummary.getState()));
     }
 
     @Test
@@ -147,7 +168,6 @@ class OrderRepositoryTest {
     private List<OrderItemRequestDto> orderItems() {
         OrderItemRequestDto orderItemRequestDto = new OrderItemRequestDto();
         orderItemRequestDto.setCount(1);
-        orderItemRequestDto.setItemName("name");
         orderItemRequestDto.setItemRef("ref1");
         return List.of(orderItemRequestDto);
     }

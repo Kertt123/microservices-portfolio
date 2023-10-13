@@ -1,10 +1,8 @@
 package com.serkowski.orderservice.service.impl;
 
-import com.serkowski.orderservice.dto.request.OrderItemRequestDto;
+import com.serkowski.orderservice.model.OrderItem;
 import com.serkowski.orderservice.service.api.ProductService;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,7 +57,7 @@ class ProductServiceImplTest {
         Mono mock = Mockito.mock(Mono.class);
         when(webClientBuilder.build()).thenReturn(webClient);
         when(webClient.post()).thenReturn(uriSpec);
-        when(uriSpec.uri(eq("http://product-service/api/product/items/reserve"))).thenReturn(headerSpec);
+        when(uriSpec.uri(eq("http://product-service/api/reservation/reserve"))).thenReturn(headerSpec);
         when(headerSpec.contentType(MediaType.APPLICATION_JSON)).thenReturn(requestBodySpec);
         when(requestBodySpec.accept(MediaType.APPLICATION_JSON)).thenReturn(requestBodySpec);
         when(requestBodySpec.headers(any())).thenReturn(requestBodySpec);
@@ -70,7 +68,7 @@ class ProductServiceImplTest {
         when(mock.transformDeferred(any())).thenReturn(mock).thenReturn(Mono.just("success"));
 
         StepVerifier
-                .create(productService.reserveItems("orderNumber1", List.of(OrderItemRequestDto.builder()
+                .create(productService.reserveItems("orderNumber1", List.of(OrderItem.builder()
                         .itemRef("ref1")
                         .count(1)
                         .build())))

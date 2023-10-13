@@ -95,13 +95,11 @@ public class ProductItemServiceImpl implements ProductItemService {
 
     private ProductItem markItemAsReserved(ProductItem productItem) {
         productItem.setAvailability(Availability.RESERVED);
-        productItem.setReservationTimeDate(LocalDateTime.now());
         return productItem;
     }
 
     private ProductItem unlockItem(ProductItem productItem) {
         productItem.setAvailability(Availability.AVAILABLE);
-        productItem.setReservationTimeDate(null);
         return productItem;
     }
 
@@ -122,7 +120,6 @@ public class ProductItemServiceImpl implements ProductItemService {
                 .serialNumber(productItem.getSerialNumber())
                 .availability(productItem.getAvailability().toString())
                 .updateDate(productItem.getUpdateDate())
-                .reservationTimeDate(productItem.getReservationTimeDate())
                 .build();
     }
 }

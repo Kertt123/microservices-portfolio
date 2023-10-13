@@ -6,6 +6,7 @@ import com.serkowski.orderservice.dto.request.OrderRequest;
 import com.serkowski.orderservice.dto.response.OrderResponse;
 import com.serkowski.orderservice.model.error.ApiCallException;
 import com.serkowski.orderservice.model.error.OrderNotFound;
+import com.serkowski.orderservice.model.error.ValidationException;
 import com.serkowski.orderservice.service.api.OrderService;
 import io.micrometer.tracing.annotation.NewSpan;
 import jakarta.validation.Valid;
@@ -31,8 +32,17 @@ public class OrderController {
     @ResponseStatus(HttpStatus.CREATED)
     @NewSpan("createOrderDraft")
     public Mono<OrderResponse> placeOrderDraft(@Valid @RequestBody OrderRequest orderRequest) {
-        log.info("test log with tracing info");
         return orderService.placeOrderDraft(orderRequest)
+                .map(orderResponse -> {
+                    orderResponse.add(linkTo(OrderController.class).slash(orderResponse.getOrderNumber()).slash(orderResponse.getVersion()).withSelfRel());
+                    return orderResponse;
+                });
+    }
+
+    @PostMapping("/accept/{orderNumber}/{versionNumber}")
+    @NewSpan("acceptOrder")
+    public Mono<OrderResponse> acceptOrder(@PathVariable String orderNumber, @PathVariable Integer versionNumber) {
+        return orderService.acceptOrder(orderNumber, versionNumber)
                 .map(orderResponse -> {
                     orderResponse.add(linkTo(OrderController.class).slash(orderResponse.getOrderNumber()).slash(orderResponse.getVersion()).withSelfRel());
                     return orderResponse;
@@ -72,6 +82,15 @@ public class OrderController {
                         .errorMessage(error.getDefaultMessage())
                         .build())
         );
+        return Mono.just(response);
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public Mono<ErrorHandlerResponse> handleValidationException(ValidationException ex) {
+        ErrorHandlerResponse response = new ErrorHandlerResponse();
+        response.setErrorMessage(ex.getMessage());
         return Mono.just(response);
     }
 

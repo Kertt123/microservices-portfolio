@@ -5,6 +5,7 @@ import com.serkowski.orderservice.dto.response.OrderResponse;
 import com.serkowski.orderservice.model.OrderSummary;
 import com.serkowski.orderservice.model.State;
 import com.serkowski.orderservice.model.error.OrderNotFound;
+import com.serkowski.orderservice.model.error.ValidationException;
 import com.serkowski.orderservice.repository.read.OrderReadRepository;
 import com.serkowski.orderservice.repository.write.OrderWriteRepository;
 import com.serkowski.orderservice.service.api.OrderMapper;
@@ -30,16 +31,33 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Mono<OrderResponse> placeOrderDraft(OrderRequest orderRequest) {
         OrderSummary orderSummary = orderWriteRepository.save(orderMapper.map(orderRequest, State.DRAFT));
+        return Mono.just(orderMapper.map(orderSummary));
+    }
 
-        return productService.reserveItems(orderSummary.getOrderNumber(), orderRequest.getOrderItems())
-                .doOnError(exception -> {
-                    log.error("Reserve items fail", exception);
-                    orderWriteRepository.delete(orderSummary);
+    @Override
+    public Mono<OrderResponse> acceptOrder(String orderNumber, Integer versionNumber) {
+        return orderReadRepository.findByOrderNumberAndVersion(orderNumber, versionNumber)
+                .map(orderSummary -> {
+                    if (orderSummary.getState() != State.DRAFT) {
+                        throw new ValidationException(String.format("Incorrect state: %s of order: %s version: %d", orderSummary.getState(), orderNumber, versionNumber));
+                    }
+                    return orderSummary;
                 })
-                .map(result -> {
-                    log.info("Response of reserve items: " + result);
-                    return orderMapper.map(orderSummary);
-                });
+                .map(orderSummary ->
+                        productService.reserveItems(orderSummary.getOrderNumber(), orderSummary.getOrderLineItemsList())
+                                .doOnError(exception -> {
+                                    log.error("Reserve items fail", exception);
+                                    orderSummary.setState(State.INVALID);
+                                    orderWriteRepository.save(orderSummary);
+                                })
+                                .map(result -> {
+                                    log.info("Response of reserve items: " + result);
+                                    orderSummary.setState(State.ACCEPTED);
+                                    orderWriteRepository.save(orderSummary);
+                                    return orderMapper.map(orderSummary);
+                                })
+                )
+                .orElseThrow(() -> new OrderNotFound(String.format("Can't update order which is not exist for number: %s and version %d", orderNumber, versionNumber)));
     }
 
     @Override
