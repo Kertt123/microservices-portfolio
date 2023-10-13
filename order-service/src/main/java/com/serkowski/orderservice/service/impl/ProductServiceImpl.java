@@ -31,6 +31,7 @@ import static org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE;
 @Slf4j
 public class ProductServiceImpl implements ProductService {
 
+    private static final String RESERVE_URL = "http://product-service/api/reservation/reserve";
     private final WebClient.Builder webClientBuilder;
     private final CircuitBreaker circuitBreaker;
     private final Retry retry;
@@ -44,7 +45,7 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public Mono<String> reserveItems(String orderNumber, List<OrderItemRequestDto> orderItems) {
         return webClientBuilder.build().post()
-                .uri("http://product-service/api/product/items/reserve")
+                .uri(RESERVE_URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON)
                 .headers(headers -> headers.setBasicAuth("user", "password"))
