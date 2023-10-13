@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-@WebFluxTest(ProductController.class)
+@WebFluxTest(ReservationController.class)
 @Import(SecurityConfig.class)
 class ReservationControllerTest {
 

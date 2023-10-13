@@ -5,8 +5,10 @@ import com.serkowski.productservice.repository.product.ProductReadRepository;
 import com.serkowski.productservice.repository.product.ProductWriteRepository;
 import com.serkowski.productservice.service.api.ProductInnerService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
+@Service
 @RequiredArgsConstructor
 public class ProductInnerServiceImpl implements ProductInnerService {
 

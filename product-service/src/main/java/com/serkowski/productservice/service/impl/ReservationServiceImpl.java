@@ -7,9 +7,11 @@ import com.serkowski.productservice.repository.reservation.ReservationWriteRepos
 import com.serkowski.productservice.service.api.ProductItemService;
 import com.serkowski.productservice.service.api.ReservationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Service
 @RequiredArgsConstructor
 public class ReservationServiceImpl implements ReservationService {
 

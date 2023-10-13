@@ -44,14 +44,13 @@ class ProductItemRepositoryTest {
     ProductWriteRepository productWriteRepository;
 
     @Autowired
-    ProductInnerService productInnerService;
-    @Autowired
     ProductItemReadRepository productItemReadRepository;
 
     @Autowired
     ProductItemWriteRepository productItemWriteRepository;
 
 
+    ProductInnerService productInnerService;
     ProductItemService productItemService;
 
     @Container
